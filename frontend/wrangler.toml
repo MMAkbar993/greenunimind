@@ -1,0 +1,80 @@
+# Cloudflare Pages Configuration
+name = "green-uni-mind"
+compatibility_date = "2024-01-15"
+
+# Pages configuration
+[env.production]
+compatibility_date = "2024-01-15"
+
+# Build configuration
+[build]
+command = "npm run build:pages"
+cwd = "."
+watch_dir = "src"
+
+# SPA routing configuration
+[[redirects]]
+from = "/teacher/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/student/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/login"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/sign-up"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/verify-otp"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/forgot-password"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/oauth/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/courses/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/user/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/create-course"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/my-courses"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "/checkout/*"
+to = "/index.html"
+status = 200
+
+# Catch-all for SPA routing
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

@@ -1,0 +1,167 @@
+/* Custom animation for slow bounce */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite ease-in-out;
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+/* Progress bar animation */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress {
+  animation: progress 2s ease-in-out forwards;
+}
+
+/* Floating animations for particles */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-10px) translateX(10px);
+  }
+  50% {
+    transform: translateY(0) translateX(20px);
+  }
+  75% {
+    transform: translateY(10px) translateX(10px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 15s infinite ease-in-out;
+}
+
+@keyframes float-slow-reverse {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(10px) translateX(-10px);
+  }
+  50% {
+    transform: translateY(0) translateX(-20px);
+  }
+  75% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+}
+
+.animate-float-slow-reverse {
+  animation: float-slow-reverse 12s infinite ease-in-out;
+}
+
+@keyframes float-medium {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-15px) translateX(15px);
+  }
+  50% {
+    transform: translateY(0) translateX(30px);
+  }
+  75% {
+    transform: translateY(15px) translateX(15px);
+  }
+}
+
+.animate-float-medium {
+  animation: float-medium 10s infinite ease-in-out;
+}
+
+@keyframes float-medium-reverse {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(15px) translateX(-15px);
+  }
+  50% {
+    transform: translateY(0) translateX(-30px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(-15px);
+  }
+}
+
+.animate-float-medium-reverse {
+  animation: float-medium-reverse 8s infinite ease-in-out;
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(20px);
+  }
+  50% {
+    transform: translateY(0) translateX(40px);
+  }
+  75% {
+    transform: translateY(20px) translateX(20px);
+  }
+}
+
+.animate-float-fast {
+  animation: float-fast 6s infinite ease-in-out;
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(128, 90, 213, 0.3);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 90, 213, 0.5);
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 90, 213, 0.3) rgba(0, 0, 0, 0.05);
+}

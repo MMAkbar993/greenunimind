@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Frontend Tokens</title>
+</head>
+<body>
+    <h1>Frontend Token Debug</h1>
+    <div id="output"></div>
+    
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        log('=== CHECKING CURRENT LOCALSTORAGE ===');
+        
+        // Check current tokens
+        const accessToken = localStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken');
+        const userData = localStorage.getItem('userData');
+        const userRole = localStorage.getItem('userRole');
+        
+        log('accessToken: ' + (accessToken ? accessToken.substring(0, 50) + '...' : 'null'));
+        log('refreshToken: ' + (refreshToken ? refreshToken.substring(0, 50) + '...' : 'null'));
+        log('userData: ' + (userData ? 'exists' : 'null'));
+        log('userRole: ' + (userRole || 'null'));
+        
+        if (userData) {
+            try {
+                const parsedUserData = JSON.parse(userData);
+                log('userData._id: ' + (parsedUserData._id || 'null'));
+                log('userData.email: ' + (parsedUserData.email || 'null'));
+                log('userData.role: ' + (parsedUserData.role || 'null'));
+            } catch (e) {
+                log('Error parsing userData: ' + e.message);
+            }
+        }
+        
+        // Check if token is expired
+        if (accessToken) {
+            try {
+                const tokenData = JSON.parse(atob(accessToken.split('.')[1]));
+                const expirationTime = tokenData.exp * 1000;
+                const currentTime = Date.now();
+                const timeToExpiration = expirationTime - currentTime;
+                
+                log('Token expires in: ' + Math.floor(timeToExpiration / 1000) + ' seconds');
+                
+                if (timeToExpiration <= 0) {
+                    log('❌ TOKEN IS EXPIRED!');
+                } else {
+                    log('✅ Token is still valid');
+                }
+            } catch (e) {
+                log('Error checking token expiration: ' + e.message);
+            }
+        }
+        
+        log('=== SETTING VALID TOKEN ===');
+        
+        // Set a valid token (the one we tested successfully)
+        const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFobWVkcmlhemJlcGFyaUBnbWFpbC5jb20iLCJyb2xlIjoidGVhY2hlciIsIl9pZCI6IjY4NWMxYjY3M2E4NjI3MzBkZDBhM2IxZSIsInRva2VuSWQiOiJ0ZXN0LXRva2VuLWlkLTEyMyIsImZhbWlseSI6InRlc3QtZmFtaWx5LTQ1NiIsInR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTA5NTgyNjcsImV4cCI6MTc1MDk2MTg2N30.-508kT5HH0KdHvC-LajWVUCNumWkwqy9I0WrOuTwxvw';
+        
+        localStorage.setItem('accessToken', validToken);
+        localStorage.setItem('refreshToken', validToken); // Use same token for refresh for testing
+        localStorage.setItem('userRole', 'teacher');
+        
+        // Set user data that matches the token
+        const validUserData = {
+            _id: '685c1b673a862730dd0a3b21', // Teacher ID
+            email: 'ahmedriazbepari@gmail.com',
+            role: 'teacher',
+            user: {
+                _id: '685c1b673a862730dd0a3b1e', // User ID
+                email: 'ahmedriazbepari@gmail.com',
+                role: 'teacher'
+            }
+        };
+        
+        localStorage.setItem('userData', JSON.stringify(validUserData));
+        
+        log('✅ Valid tokens and user data set!');
+        log('Now refresh the lectures page: http://localhost:8080/teacher/lectures');
+        
+        // Add a button to refresh the page
+        const button = document.createElement('button');
+        button.textContent = 'Refresh Lectures Page';
+        button.onclick = function() {
+            window.location.href = 'http://localhost:8080/teacher/lectures';
+        };
+        document.body.appendChild(button);
+    </script>
+</body>
+</html>

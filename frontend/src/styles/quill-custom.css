@@ -1,0 +1,28 @@
+/* Custom styles for ReactQuill editor */
+.quill-no-padding .ql-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.quill-no-padding .ql-editor {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+
+.quill-no-padding .ql-toolbar {
+  padding: 4px;
+}
+
+/* Fix for extra space in ReactQuill */
+.react-quill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ql-container {
+  flex: 1;
+  overflow-y: auto;
+}

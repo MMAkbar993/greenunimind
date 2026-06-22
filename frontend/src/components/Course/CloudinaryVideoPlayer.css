@@ -1,0 +1,262 @@
+/* Cloudinary Video Player Styles */
+.cloudinary-video-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+  background-color: #000;
+}
+
+.cloudinary-video-container .cld-video-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Custom control bar styles */
+.vjs-control-bar {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  height: 40px;
+}
+
+/* Settings button styles */
+.vjs-settings-button {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: white;
+}
+
+.vjs-settings-button:hover {
+  color: #4a90e2;
+}
+
+/* Quality selector styles */
+.vjs-quality-selector .vjs-menu-button {
+  margin-right: 0.5em;
+  font-size: 13px;
+}
+
+/* Playback rate selector styles */
+.vjs-playback-rate .vjs-menu-button {
+  font-size: 13px;
+}
+
+/* Big play button styles */
+.vjs-big-play-button {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  font-size: 3em;
+  height: 2em;
+  width: 2em;
+  margin-top: -1em;
+  margin-left: -1em;
+  line-height: 2em;
+  transition: all 0.3s ease;
+}
+
+.vjs-big-play-button:hover {
+  background-color: rgba(74, 144, 226, 0.9);
+  border-color: #4a90e2;
+}
+
+/* Progress bar styles */
+.vjs-progress-control {
+  min-width: 4em;
+  flex: 1;
+}
+
+.vjs-progress-control .vjs-progress-holder {
+  margin: 0;
+  height: 0.3em;
+}
+
+.vjs-progress-control .vjs-play-progress {
+  background-color: #4a90e2;
+}
+
+.vjs-progress-control .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Volume control styles */
+.vjs-volume-panel {
+  margin-right: 0.5em;
+}
+
+.vjs-volume-control.vjs-volume-horizontal {
+  width: 5em;
+}
+
+.vjs-volume-bar {
+  margin: 1.35em 0.45em;
+  height: 0.25em;
+}
+
+.vjs-volume-level {
+  background-color: #4a90e2;
+  height: 0.25em;
+}
+
+/* Time display styles */
+.vjs-current-time,
+.vjs-duration,
+.vjs-time-divider {
+  font-size: 13px;
+  line-height: 40px;
+}
+
+/* Fullscreen button styles */
+.vjs-fullscreen-control {
+  cursor: pointer;
+}
+
+/* Picture-in-Picture button styles */
+.vjs-picture-in-picture-control {
+  cursor: pointer;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .vjs-time-divider,
+  .vjs-duration {
+    display: none;
+  }
+
+  .vjs-volume-control.vjs-volume-horizontal {
+    width: 3em;
+  }
+}
+
+@media (max-width: 480px) {
+  .vjs-volume-panel {
+    display: none;
+  }
+}
+
+/* Custom quality menu styles */
+.vjs-quality-selector .vjs-menu-content {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 2px;
+  padding: 0.5em 0;
+}
+
+.vjs-quality-selector .vjs-menu-item {
+  text-transform: none;
+  font-size: 13px;
+  padding: 0.5em 1em;
+}
+
+.vjs-quality-selector .vjs-selected {
+  background-color: #4a90e2;
+}
+
+/* Custom playback rate menu styles */
+.vjs-playback-rate .vjs-menu-content {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 2px;
+  padding: 0.5em 0;
+}
+
+.vjs-playback-rate .vjs-menu-item {
+  text-transform: none;
+  font-size: 13px;
+  padding: 0.5em 1em;
+}
+
+.vjs-playback-rate .vjs-selected {
+  background-color: #4a90e2;
+}
+
+/* Ensure the settings button is properly positioned */
+.vjs-settings-button {
+  position: relative;
+  order: 8; /* Position before PiP and fullscreen buttons */
+}
+
+/* Ensure the PiP button is properly positioned */
+.vjs-picture-in-picture-control {
+  order: 9;
+}
+
+/* Ensure the fullscreen button is properly positioned */
+.vjs-fullscreen-control {
+  order: 10;
+}
+
+/* Custom spacer to push settings, PiP, and fullscreen buttons to the right */
+.vjs-custom-control-spacer {
+  flex: 1;
+}
+
+/* Ensure the control bar is always visible on hover */
+.cld-video-player:hover .vjs-control-bar {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Adaptive streaming quality indicator */
+.vjs-resolution-button {
+  font-family: 'VideoJS';
+  cursor: pointer;
+  float: right;
+  margin-left: 5px;
+}
+
+/* Cloudinary specific styles */
+.cld-video-player.cld-fluid {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 16/9;
+  display: block !important;
+}
+
+/* Ensure the Cloudinary player fits within its container */
+.cloudinary-video-container .cld-video-player {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Fix for Cloudinary player in Safari */
+.cloudinary-video-container .cld-video-player video {
+  object-fit: contain !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Fix for video element visibility */
+.vjs-tech {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Ensure video is visible */
+.cloudinary-video-container video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}

@@ -1,0 +1,23 @@
+# SPA routing - redirect all routes to index.html for client-side routing
+# This handles React Router client-side routing
+
+# Specific routes that should be handled by React Router
+/teacher/*    /index.html   200
+/student/*    /index.html   200
+/login        /index.html   200
+/sign-up      /index.html   200
+/verify-otp   /index.html   200
+/forgot-password    /index.html   200
+/oauth/*      /index.html   200
+/courses/*    /index.html   200
+/user/*       /index.html   200
+/create-course      /index.html   200
+/my-courses   /index.html   200
+/checkout/*   /index.html   200
+
+# API proxy to prevent CORS issues and improve performance
+# This rule is for production deployment only - disabled for local development
+# /api/*  https://green-uni-mind-backend-oxpo.onrender.com/api/:splat  200
+
+# Catch-all rule for any other routes (must be last)
+/*    /index.html   200

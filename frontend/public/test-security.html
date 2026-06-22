@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Uni Mind - Security Integration Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .test-result {
+            font-family: 'Courier New', monospace;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .warning {
+            color: #f39c12;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.loading {
+            background-color: #f39c12;
+            color: white;
+        }
+        .status.success {
+            background-color: #27ae60;
+            color: white;
+        }
+        .status.error {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Green Uni Mind Security Integration Test</h1>
+        
+        <div class="status" id="status">
+            Ready to test security integration
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="runSecurityTests()" id="testButton">Run Security Tests</button>
+            <button onclick="clearResults()" id="clearButton">Clear Results</button>
+        </div>
+
+        <div id="testResults"></div>
+    </div>
+
+    <script type="module">
+        // Mock environment for testing
+        window.Environment = {
+            isDevelopment: () => true,
+            isProduction: () => false,
+            current: () => 'development',
+            isReduxDevToolsEnabled: () => true
+        };
+
+        // Mock security config
+        window.SecurityConfig = {
+            REDUX_DEVTOOLS: { ENABLED: true },
+            API_SECURITY: { ENCRYPT_REQUESTS: false, ENCRYPT_RESPONSES: false },
+            COOKIE_SECURITY: { SECURE: false },
+            ENCRYPTION: { ENCRYPT_LOCAL_STORAGE: false, ENCRYPT_SESSION_STORAGE: false }
+        };
+
+        // Security utility functions
+        window.sanitizeData = (data) => {
+            if (!data || typeof data !== 'object') return data;
+            const sensitivePatterns = [/password/i, /token/i, /secret/i, /key/i];
+            const sanitized = Array.isArray(data) ? [...data] : { ...data };
+            
+            for (const key in sanitized) {
+                if (sensitivePatterns.some(pattern => pattern.test(key))) {
+                    sanitized[key] = '[REDACTED]';
+                } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+                    sanitized[key] = window.sanitizeData(sanitized[key]);
+                }
+            }
+            return sanitized;
+        };
+
+        window.generateSecureRandom = (length = 32) => {
+            const array = new Uint8Array(length);
+            crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        };
+
+        window.hashString = async (input) => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(input);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+
+        // Simple encryption service mock
+        window.encryptionService = {
+            async encryptData(data) {
+                const encoder = new TextEncoder();
+                const dataBuffer = encoder.encode(data);
+                const key = await crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    dataBuffer
+                );
+                
+                return {
+                    data: Array.from(new Uint8Array(encrypted), b => b.toString(16).padStart(2, '0')).join(''),
+                    iv: Array.from(iv, b => b.toString(16).padStart(2, '0')).join(''),
+                    tag: 'mock-tag',
+                    timestamp: Date.now(),
+                    _key: key // Store for decryption (not secure, just for testing)
+                };
+            },
+
+            async decryptData(encryptedData) {
+                const ciphertext = new Uint8Array(
+                    encryptedData.data.match(/.{2}/g).map(byte => parseInt(byte, 16))
+                );
+                const iv = new Uint8Array(
+                    encryptedData.iv.match(/.{2}/g).map(byte => parseInt(byte, 16))
+                );
+                
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    encryptedData._key,
+                    ciphertext
+                );
+                
+                const decoder = new TextDecoder();
+                return decoder.decode(decrypted);
+            }
+        };
+
+        window.runSecurityTests = async function() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('testResults');
+            const testButton = document.getElementById('testButton');
+            
+            statusEl.className = 'status loading';
+            statusEl.textContent = 'Running security tests...';
+            testButton.disabled = true;
+            
+            resultsEl.innerHTML = '';
+            
+            try {
+                await runAllTests();
+                statusEl.className = 'status success';
+                statusEl.textContent = 'All security tests completed successfully!';
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = 'Some tests failed. Check results below.';
+                addTestResult('Error', error.message, 'error');
+            } finally {
+                testButton.disabled = false;
+            }
+        };
+
+        async function runAllTests() {
+            addTestResult('Environment Detection', `
+Current Environment: ${Environment.current()}
+Is Development: ${Environment.isDevelopment()}
+Is Production: ${Environment.isProduction()}
+Redux DevTools Enabled: ${Environment.isReduxDevToolsEnabled()}`, 'success');
+
+            addTestResult('Security Configuration', `
+Redux DevTools: ${SecurityConfig.REDUX_DEVTOOLS.ENABLED}
+API Encryption: ${SecurityConfig.API_SECURITY.ENCRYPT_REQUESTS}
+Cookie Security: ${SecurityConfig.COOKIE_SECURITY.SECURE}
+Local Storage Encryption: ${SecurityConfig.ENCRYPTION.ENCRYPT_LOCAL_STORAGE}`, 'success');
+
+            const sensitiveData = {
+                username: 'testuser',
+                password: 'secret123',
+                token: 'jwt-token',
+                normalData: 'public info'
+            };
+            const sanitized = sanitizeData(sensitiveData);
+            addTestResult('Data Sanitization', `
+Original: ${JSON.stringify(sensitiveData, null, 2)}
+Sanitized: ${JSON.stringify(sanitized, null, 2)}`, 'success');
+
+            const random = generateSecureRandom(16);
+            addTestResult('Secure Random Generation', `
+16-byte random: ${random}
+Length: ${random.length} characters`, 'success');
+
+            const testString = 'Hello, Security!';
+            const hash = await hashString(testString);
+            addTestResult('Hash Function', `
+Input: "${testString}"
+SHA-256: ${hash}`, 'success');
+
+            const testData = 'Sensitive encryption test data';
+            const encrypted = await encryptionService.encryptData(testData);
+            const decrypted = await encryptionService.decryptData(encrypted);
+            const encryptionSuccess = testData === decrypted;
+            
+            addTestResult('Encryption/Decryption', `
+Original: "${testData}"
+Encrypted data length: ${encrypted.data.length}
+Decrypted: "${decrypted}"
+Test Result: ${encryptionSuccess ? 'PASSED' : 'FAILED'}`, encryptionSuccess ? 'success' : 'error');
+
+            // Test localStorage if available
+            if (typeof localStorage !== 'undefined') {
+                const testKey = 'security_test_item';
+                const testValue = { secret: 'test data', timestamp: Date.now() };
+                
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey) || '{}');
+                localStorage.removeItem(testKey);
+                
+                const storageSuccess = JSON.stringify(retrieved) === JSON.stringify(testValue);
+                addTestResult('Local Storage Test', `
+Stored: ${JSON.stringify(testValue)}
+Retrieved: ${JSON.stringify(retrieved)}
+Test Result: ${storageSuccess ? 'PASSED' : 'FAILED'}`, storageSuccess ? 'success' : 'error');
+            }
+        }
+
+        function addTestResult(title, content, type = 'success') {
+            const resultsEl = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-section';
+            
+            testDiv.innerHTML = `
+                <div class="test-title">${title}</div>
+                <div class="test-result ${type}">${content}</div>
+            `;
+            
+            resultsEl.appendChild(testDiv);
+        }
+
+        window.clearResults = function() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('status').className = 'status';
+            document.getElementById('status').textContent = 'Ready to test security integration';
+        };
+    </script>
+</body>
+</html>
