@@ -10,6 +10,7 @@ import { seedAchievements } from './controllers/achievementController.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+
 const requiredEnv = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGODB_URI'];
 const missing = requiredEnv.filter((k) => !process.env[k]?.trim());
 if (missing.length) {

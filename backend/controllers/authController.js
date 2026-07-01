@@ -72,6 +72,93 @@ const login = async (req, res) => {
   }
 };
 
+const googleLogin = async (req, res) => {
+  try {
+    const { googleId, email, name, photoUrl, role } = req.body;
+
+    if (!googleId || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google account information is required.',
+      });
+    }
+
+    let user = await User.findOne({ email: email.toLowerCase() }).select('+googleId');
+
+    if (user) {
+      if (!user.isActive) {
+        return res.status(401).json({
+          success: false,
+          message: 'Account is deactivated.',
+        });
+      }
+
+      if (!user.googleId) {
+        user.googleId = googleId;
+        if (photoUrl && !user.profileImg) user.profileImg = photoUrl;
+        await user.save({ validateModifiedOnly: true });
+      }
+    } else {
+      const nameParts = (name || 'Google User').trim().split(/\s+/);
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || firstName;
+
+      user = await User.create({
+        name: { firstName, lastName },
+        email: email.toLowerCase(),
+        password: crypto.randomBytes(16).toString('hex'),
+        role: role === 'teacher' ? 'teacher' : 'student',
+        googleId,
+        profileImg: photoUrl || null,
+        isEmailVerified: true,
+      });
+    }
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id);
+
+    const userObj = user.toObject();
+    delete userObj.password;
+    delete userObj.googleId;
+
+    const responseUser = {
+      _id: userObj._id,
+      name: userObj.name,
+      email: userObj.email,
+      role: userObj.role,
+      profileImg: userObj.profileImg,
+      gender: userObj.gender,
+      isEmailVerified: userObj.isEmailVerified,
+      createdAt: userObj.createdAt,
+      updatedAt: userObj.updatedAt,
+    };
+
+    res.status(200).json({
+      success: true,
+      token: accessToken,
+      accessToken,
+      refreshToken,
+      user: responseUser,
+      data: {
+        user: responseUser,
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'This Google account is already linked to another user.',
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Google sign in failed.',
+    });
+  }
+};
+
 const logout = async (req, res) => {
   try {
     res.status(200).json({
@@ -335,6 +422,7 @@ const getRateLimitStatus = async (req, res) => {
 
 export {
   login,
+  googleLogin,
   logout,
   refreshToken,
   verifyOtp,
