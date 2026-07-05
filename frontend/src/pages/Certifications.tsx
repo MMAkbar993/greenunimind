@@ -3,9 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Clock, Users, CheckCircle, Star, BookOpen } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Certifications = () => {
+  const navigate = useNavigate();
+
+  const handleEnroll = (title: string) => {
+    toast.info(`Enrollment for "${title}" is coming soon. Browse our available courses in the meantime.`);
+    navigate("/courses");
+  };
+
   const certifications = [
     {
       id: 1,
@@ -231,7 +239,10 @@ const Certifications = () => {
                           <span className="text-2xl font-bold text-green-600">{cert.price}</span>
                           <span className="text-sm text-gray-500 ml-1">USD</span>
                         </div>
-                        <Button className="bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleEnroll(cert.title)}
+                        >
                           Enroll Now
                         </Button>
                       </div>
