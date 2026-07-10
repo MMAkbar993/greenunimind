@@ -55,6 +55,11 @@ interface VideoError {
   retryable: boolean;
 }
 
+// Cloudinary returns HTTP 423 while it asynchronously finishes generating an HLS
+// stream for a newly uploaded video; this can take longer than a normal transient
+// error, so it gets a longer retry budget than other playback failures.
+const PROCESSING_MAX_RETRIES = 8;
+
 interface VideoAnalytics {
   watchTime: number;
   completionRate: number;
@@ -87,6 +92,9 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const isReadyRef = useRef(false);
   const retryCountRef = useRef(0);
+  const resumeTimeRef = useRef(initialPosition);
+  const isProcessingRef = useRef(false);
+  const [playerKey, setPlayerKey] = useState(0);
   const analyticsRef = useRef<VideoAnalytics>({
     watchTime: 0,
     completionRate: 0,
@@ -201,10 +209,14 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Error handling and retry logic
   const handleRetry = useCallback(async () => {
-    if (retryCountRef.current >= maxRetries) {
+    const effectiveMaxRetries = isProcessingRef.current ? PROCESSING_MAX_RETRIES : maxRetries;
+
+    if (retryCountRef.current >= effectiveMaxRetries) {
       setError({
         type: 'unknown',
-        message: 'Maximum retry attempts reached. Please refresh the page or contact support.',
+        message: isProcessingRef.current
+          ? 'This video is taking longer than usual to process. Please try again in a few minutes.'
+          : 'Maximum retry attempts reached. Please refresh the page or contact support.',
         retryable: false
       });
       return;
@@ -214,17 +226,25 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
     setError(null);
     retryCountRef.current += 1;
 
+    // Cloudinary can take a while to finish generating a new HLS stream, so back off
+    // more slowly (and for longer) while it's still processing than for other errors.
+    const delay = isProcessingRef.current
+      ? Math.min(3000 * retryCountRef.current, 15000)
+      : 1000 * retryCountRef.current;
+
     try {
-      // Wait a bit before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000 * retryCountRef.current));
+      await new Promise(resolve => setTimeout(resolve, delay));
 
       if (playerRef.current) {
-        // Force reload the video
-        const currentTime = playerRef.current.getCurrentTime();
-        playerRef.current.seekTo(currentTime);
+        resumeTimeRef.current = playerRef.current.getCurrentTime() || resumeTimeRef.current;
       }
+      // Remount the player so hls.js is fully reinitialized and re-fetches the
+      // manifest — a fatal HLS error leaves the old instance unable to recover
+      // from just seeking.
+      isReadyRef.current = false;
+      setPlayerKey(key => key + 1);
 
-      debugOnly.log(`Video retry attempt ${retryCountRef.current}/${maxRetries}`);
+      debugOnly.log(`Video retry attempt ${retryCountRef.current}/${effectiveMaxRetries}`);
     } catch (err) {
       Logger.error('Video retry failed:', err);
     } finally {
@@ -233,12 +253,30 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [maxRetries]);
 
   // Enhanced error handler
-  const handleVideoError = useCallback((error: any) => {
+  // react-player forwards hls.js errors as (event: 'hlsError', data, hls, Hls) — `data`
+  // carries the real details (fatal flag, HTTP response code, etc). It was previously
+  // dropped, so a transient "still processing" 423 looked identical to a broken video.
+  const handleVideoError = useCallback((error: any, data?: any) => {
+    // Non-fatal hls.js errors are recovered internally by hls.js; ignore them.
+    if (data && data.fatal === false) {
+      debugOnly.log('Non-fatal HLS error, ignoring:', data.details);
+      return;
+    }
+
     analyticsRef.current.errorCount += 1;
 
     let videoError: VideoError;
+    const httpStatus = data?.response?.code;
+    isProcessingRef.current = httpStatus === 423;
 
-    if (!isOnline) {
+    if (isProcessingRef.current) {
+      videoError = {
+        type: 'network',
+        message: 'This video is still being processed. Retrying shortly…',
+        code: 423,
+        retryable: true
+      };
+    } else if (!isOnline) {
       videoError = {
         type: 'network',
         message: 'No internet connection. Please check your network and try again.',
@@ -298,10 +336,11 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
     setError(videoError);
     onError?.(videoError);
 
-    Logger.error('Video player error:', { error: videoError, originalError: error });
+    Logger.error('Video player error:', { error: videoError, originalError: error, hlsData: data });
 
     // Auto-retry for retryable errors
-    if (videoError.retryable && autoRetry && retryCountRef.current < maxRetries) {
+    const effectiveMaxRetries = isProcessingRef.current ? PROCESSING_MAX_RETRIES : maxRetries;
+    if (videoError.retryable && autoRetry && retryCountRef.current < effectiveMaxRetries) {
       setTimeout(() => handleRetry(), 2000);
     } else {
       toast.error("Video Error", {
@@ -325,6 +364,7 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!seeking) {
       setPlayed(state.played);
       setLoaded(state.loaded);
+      resumeTimeRef.current = state.playedSeconds;
       onTimeUpdate?.(state.playedSeconds);
 
       // Save position to Redux store every 5 seconds
@@ -351,8 +391,9 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleReady = useCallback(() => {
     if (!isReadyRef.current) {
       isReadyRef.current = true;
-      if (initialPosition > 0 && playerRef.current) {
-        playerRef.current.seekTo(initialPosition);
+      const seekTarget = resumeTimeRef.current > 0 ? resumeTimeRef.current : initialPosition;
+      if (seekTarget > 0 && playerRef.current) {
+        playerRef.current.seekTo(seekTarget);
       }
       onReady?.();
     }
@@ -536,6 +577,7 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
       onMouseLeave={() => setShowControls(false)}
     >
       <ReactPlayer
+        key={playerKey}
         ref={playerRef}
         url={videoSource}
         playing={isPlaying}

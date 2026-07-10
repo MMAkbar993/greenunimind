@@ -116,6 +116,7 @@ export const SecurityConfig = {
         'https://api.cloudinary.com',
         'https://res.cloudinary.com',
         'https://www.googleapis.com',
+        'https://cdn.jsdelivr.net',
         'wss:',
         'ws:',
         ...getBackendUrls()
