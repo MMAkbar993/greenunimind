@@ -95,6 +95,10 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
   const resumeTimeRef = useRef(initialPosition);
   const isProcessingRef = useRef(false);
   const [playerKey, setPlayerKey] = useState(0);
+  // Set when the HLS (.m3u8) stream fails with a definitive (non-423) error,
+  // e.g. Cloudinary never generated/rejects it. Falls back to the direct file
+  // instead of endlessly retrying a request that will never succeed.
+  const [hlsBlocked, setHlsBlocked] = useState(false);
   const analyticsRef = useRef<VideoAnalytics>({
     watchTime: 0,
     completionRate: 0,
@@ -142,8 +146,8 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Determine the best video source based on available options
   const videoSource = useMemo(() => {
-    // Prefer HLS for adaptive streaming if available
-    if (hlsUrl && ReactPlayer.canPlay(hlsUrl)) {
+    // Prefer HLS for adaptive streaming if available, unless it's been marked broken
+    if (!hlsBlocked && hlsUrl && ReactPlayer.canPlay(hlsUrl)) {
       return hlsUrl;
     }
 
@@ -158,7 +162,7 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
 
     // Fallback to original source
     return src;
-  }, [src, hlsUrl, videoResolutions, currentQuality]);
+  }, [src, hlsUrl, videoResolutions, currentQuality, hlsBlocked]);
 
   // Network status monitoring
   useEffect(() => {
@@ -265,8 +269,24 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
 
     analyticsRef.current.errorCount += 1;
 
-    let videoError: VideoError;
     const httpStatus = data?.response?.code;
+
+    // A definitive (non-423) 4xx means Cloudinary is rejecting/never generated this HLS
+    // stream — retrying the identical request will never succeed. If a direct file source
+    // is available, switch to it once instead of hammering the broken URL forever.
+    const isDefinitiveHlsFailure = httpStatus >= 400 && httpStatus < 500 && httpStatus !== 423;
+    if (isDefinitiveHlsFailure && videoSource === hlsUrl && !hlsBlocked && (src || videoResolutions.length > 0)) {
+      Logger.error('HLS stream failed permanently, falling back to direct file:', { httpStatus, hlsUrl });
+      setHlsBlocked(true);
+      retryCountRef.current = 0;
+      isProcessingRef.current = false;
+      isReadyRef.current = false;
+      setError(null);
+      setPlayerKey(key => key + 1);
+      return;
+    }
+
+    let videoError: VideoError;
     isProcessingRef.current = httpStatus === 423;
 
     if (isProcessingRef.current) {
@@ -347,7 +367,7 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
         description: videoError.message,
       });
     }
-  }, [isOnline, onError, autoRetry, maxRetries, handleRetry, toast]);
+  }, [isOnline, onError, autoRetry, maxRetries, handleRetry, toast, videoSource, hlsUrl, hlsBlocked, src, videoResolutions]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handlePlay = useCallback(() => {
