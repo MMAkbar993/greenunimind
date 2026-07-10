@@ -15,11 +15,11 @@ export async function onRequest(context: any) {
   // Add CSP header with backend URLs (this works better than meta element)
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.stripe.com https://generativelanguage.googleapis.com https://api.cloudinary.com wss: ws: http://localhost:5000 https://green-uni-mindbackend.vercel.app https://green-uni-mind-backend-oxpo.onrender.com",
+    "connect-src 'self' https://api.stripe.com https://generativelanguage.googleapis.com https://api.cloudinary.com https://res.cloudinary.com wss: ws: http://localhost:5000 https://green-uni-mindbackend.vercel.app https://green-uni-mind-backend-oxpo.onrender.com",
     "media-src 'self' blob: https:",
     "object-src 'none'",
     "base-uri 'self'",

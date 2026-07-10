@@ -105,7 +105,7 @@ export const SecurityConfig = {
     ENABLED: Environment.isProduction(),
     DIRECTIVES: {
       'default-src': ["'self'"],
-      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net'],
       'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       'font-src': ["'self'", 'https://fonts.gstatic.com'],
       'img-src': ["'self'", 'data:', 'https:', 'blob:'],
@@ -114,6 +114,7 @@ export const SecurityConfig = {
         'https://api.stripe.com',
         'https://generativelanguage.googleapis.com',
         'https://api.cloudinary.com',
+        'https://res.cloudinary.com',
         'https://www.googleapis.com',
         'wss:',
         'ws:',
