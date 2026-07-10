@@ -194,6 +194,19 @@ const LecturePage = () => {
   const [markLectureComplete, { isLoading: isMarkingComplete }] =
     useMarkLectureCompleteMutation();
 
+  // Log fetch errors once per occurrence instead of on every render
+  useEffect(() => {
+    if (currentLectureError) {
+      console.error("Lecture error:", currentLectureError);
+    }
+  }, [currentLectureError]);
+
+  useEffect(() => {
+    if (enrolledCoursesError) {
+      console.error("Enrolled courses error:", enrolledCoursesError);
+    }
+  }, [enrolledCoursesError]);
+
   // Enhanced status indicator component
   const StatusIndicator = () => {
     const performanceScore = performanceMonitoring.getPerformanceScore();
@@ -608,7 +621,6 @@ const LecturePage = () => {
   }
   // Handle errors
   if (enrolledCoursesError) {
-    console.error("Enrolled courses error:", enrolledCoursesError);
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4 sm:p-6">
         <div className="bg-white border border-red-100 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-xl relative overflow-hidden">
@@ -664,8 +676,6 @@ const LecturePage = () => {
 
   // Handle lecture error
   if (currentLectureError) {
-    console.error("Lecture error:", currentLectureError);
-
     // Check if it's an access error (403)
     const errorStatus = (currentLectureError as { status?: number })?.status;
     if (errorStatus === 403) {

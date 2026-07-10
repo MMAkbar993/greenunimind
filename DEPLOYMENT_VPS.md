@@ -42,6 +42,11 @@ SSH into the server:
 
 ```bash
 ssh root@72.62.75.62
+English1112#
+cd /var/www/greenunimind
+git pull origin main
+pm2 restart all
+
 ```
 
 ### 1.1 Inspect existing setup (read-only)
@@ -159,7 +164,7 @@ PORT=5001
 NODE_ENV=production
 
 # Required
-MONGODB_URI=mongodb+srv://...
+MONGODB_URI=mongodb+srv://enligtenuser:enligtenuser@cluster0.qkqhkze.mongodb.net/?appName=Cluster0
 JWT_SECRET=your_strong_secret
 JWT_REFRESH_SECRET=your_strong_refresh_secret
 JWT_EXPIRE=7d
