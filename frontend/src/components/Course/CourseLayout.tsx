@@ -381,20 +381,10 @@ const CourseLayout = ({
         });
         return;
       } else if (onMarkComplete) {
-        toast.loading("Marking Lecture Complete", {
-          description: "Marking lecture as complete...",
-        });
-
-        try {
-          // Call onMarkComplete which will handle navigation
-          onMarkComplete();
-          return;
-        } catch (error) {
-          debugOnly.log(
-            "Error in handleNavigate while marking complete:",
-            error
-          );
-        }
+        // onMarkComplete (LecturePage.handleMarkComplete) shows its own
+        // loading/success/error toasts and handles navigation.
+        onMarkComplete();
+        return;
       }
     } else if (isCompleted || prevLectureId === lectureId) {
       if (prevLectureId === lectureId) {

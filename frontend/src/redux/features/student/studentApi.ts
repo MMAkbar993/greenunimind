@@ -101,8 +101,9 @@ export const studentApi = baseApi.injectEndpoints({
       },
     }),
 
-    // Generate certificate
-    generateCertificate: builder.mutation({
+    // Generate certificate - backend streams back a PDF (or a JSON error), so
+    // the response is read as a blob unless the server responded with JSON.
+    generateCertificate: builder.mutation<Blob, { studentId: string; courseId: string }>({
       query: ({ studentId, courseId }) => {
         // Check if studentId and courseId are valid
         if (!studentId || !courseId) {
@@ -111,12 +112,17 @@ export const studentApi = baseApi.injectEndpoints({
         return {
           url: `/students/${studentId}/generate-certificate/${courseId}`,
           method: "POST",
+          responseHandler: async (response: Response) => {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+              return response.json();
+            }
+            return response.blob();
+          },
+          cache: "no-cache",
         };
       },
       invalidatesTags: ["courseProgress", "enrolledCourses"],
-      transformResponse: (response: TResponseRedux<any>) => ({
-        data: response.data,
-      }),
     }),
   }),
 });

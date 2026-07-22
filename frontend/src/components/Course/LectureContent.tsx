@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Clock, User, Calendar, Tag } from "lucide-react";
-import { toast } from "@/utils/toast";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeDisplay } from "@/utils/formatTime";
 import { ILecture } from "@/types/course";
@@ -28,20 +27,7 @@ const LectureContent = ({
 
   const handleMarkComplete = () => {
     if (onMarkComplete) {
-      try {
-        // Show toast before calling the function
-        toast.loading("Marking lecture as complete", {
-          description: "Your progress is being updated...",
-        });
-
-        // Call the onMarkComplete function
-        onMarkComplete();
-      } catch (error) {
-        console.error("Error in LectureContent handleMarkComplete:", error);
-        toast.error("Error", {
-          description: "Failed to mark lecture as complete",
-        });
-      }
+      onMarkComplete();
     }
   };
 

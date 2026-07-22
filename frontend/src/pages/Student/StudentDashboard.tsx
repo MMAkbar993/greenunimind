@@ -3,7 +3,9 @@ import { useGetMeQuery } from "@/redux/features/auth/authApi";
 import {
   useGetEnrolledCoursesQuery,
   useGetCourseProgressQuery,
+  useGenerateCertificateMutation,
 } from "@/redux/features/student/studentApi";
+import { toast } from "@/utils/toast";
 import { useGetRecommendationsQuery } from "@/redux/features/course/courseApi";
 import { useGetMyAchievementsQuery } from "@/redux/features/achievement/achievementApi";
 import { useState, useEffect } from "react";
@@ -31,7 +33,8 @@ import {
   BookOpenCheck,
   Hourglass,
   Zap,
-  PlayCircle
+  PlayCircle,
+  Loader2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ICourse } from "@/types/course";
@@ -125,6 +128,51 @@ const Dashboard = () => {
 
   // Combine loading states to ensure we show loading state during initial load
   const isLoading = isUserLoading || isCoursesLoading || isProgressLoading;
+
+  const [generateCertificate, { isLoading: isGeneratingCertificate }] =
+    useGenerateCertificateMutation();
+
+  const handleDownloadCertificate = async () => {
+    if (!studentId || !selectedCourseId) return;
+
+    try {
+      const result = await generateCertificate({
+        studentId,
+        courseId: selectedCourseId,
+      }).unwrap();
+
+      if (!(result instanceof Blob)) {
+        throw new Error(
+          (result as { message?: string })?.message ||
+            "Failed to generate certificate."
+        );
+      }
+
+      const url = window.URL.createObjectURL(result);
+      const filename = `GreenUniMind-Certificate-${(recentCourse?.title || "course").replace(
+        /[^a-zA-Z0-9]/g,
+        "-"
+      )}.pdf`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Certificate Downloaded", {
+        description: "Your certificate has been saved to your downloads.",
+      });
+    } catch (error) {
+      const err = error as { data?: { message?: string }; message?: string };
+      toast.error("Error", {
+        description:
+          err?.data?.message || err?.message || "Failed to generate certificate.",
+      });
+    }
+  };
 
   // Calculate overall progress across all courses
   const calculateOverallProgress = () => {
@@ -550,12 +598,18 @@ const Dashboard = () => {
                       !(
                         (courseProgressData?.data?.percentage === 100) ||
                         (recentCourse?.progress === 100)
-                      )
+                      ) || isGeneratingCertificate
                     }
+                    onClick={handleDownloadCertificate}
                     size="sm"
                   >
-                    {(courseProgressData?.data?.percentage === 100) ||
-                     (recentCourse?.progress === 100)
+                    {isGeneratingCertificate ? (
+                      <span className="flex items-center justify-center gap-1.5">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Generating...
+                      </span>
+                    ) : (courseProgressData?.data?.percentage === 100) ||
+                      (recentCourse?.progress === 100)
                       ? "Download Certificate"
                       : "Complete the course first"}
                   </Button>

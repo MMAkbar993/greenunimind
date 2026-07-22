@@ -40,7 +40,7 @@ const CourseCompletionModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
+      <DialogContent className="sm:max-w-md p-0 max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl border-0 shadow-2xl">
         {/* Animated background with particles */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 z-0 overflow-hidden">
           {/* Animated particles */}
