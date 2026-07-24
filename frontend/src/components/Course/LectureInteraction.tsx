@@ -140,7 +140,7 @@ const LectureInteractions = ({
           tags: bookmarkTags,
           notes: bookmarkNotes,
         },
-      });
+      }).unwrap();
 
       // Reset form fields
       setBookmarkTitle("");
@@ -177,7 +177,7 @@ const LectureInteractions = ({
       await shareBookmark({
         bookmarkId,
         studentIds: shareEmail ? [shareEmail] : [], // Empty array means share with all
-      });
+      }).unwrap();
 
       // Reset share email
       setShareEmail("");
@@ -212,7 +212,7 @@ const LectureInteractions = ({
           tags: bookmarkTags,
           notes: bookmarkNotes,
         },
-      });
+      }).unwrap();
 
       // Reset form and editing state
       setBookmarkTitle("");
@@ -255,7 +255,7 @@ const LectureInteractions = ({
           lectureId,
           answered: false,
         },
-      });
+      }).unwrap();
 
       setQuestionText("");
 
@@ -512,7 +512,7 @@ const LectureInteractions = ({
                         onClick={async () => {
                           if (bookmark._id) {
                             try {
-                              await deleteBookmark(bookmark._id);
+                              await deleteBookmark(bookmark._id).unwrap();
                               toast.success("Bookmark deleted", {
                                 description: "Bookmark has been removed",
                               });
@@ -808,15 +808,13 @@ const LectureInteractions = ({
                     onClick={async () => {
                       if (question._id) {
                         try {
-                          await deleteQuestion(question._id);
+                          await deleteQuestion(question._id).unwrap();
                           toast.success("Question deleted", {
                             description: "Question has been removed",
                           });
                         } catch (error) {
-                          toast({
-                            title: "Error",
+                          toast.error("Error", {
                             description: "Failed to delete question",
-                            variant: "destructive",
                           });
                         }
                       }

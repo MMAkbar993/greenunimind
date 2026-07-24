@@ -88,7 +88,7 @@ const LectureNotes = ({ lectureId }: LectureNotesProps) => {
                 lectureId,
                 isRichText: false,
               },
-            });
+            }).unwrap();
 
             // Only show toast if there was actual content saved (not on initial load)
             if (notes.trim().length > 0) {
@@ -133,7 +133,7 @@ const LectureNotes = ({ lectureId }: LectureNotesProps) => {
           lectureId,
           isRichText: false,
         },
-      });
+      }).unwrap();
 
       toast.success("Notes saved", {
         description: "Your lecture notes have been saved.",
@@ -156,7 +156,7 @@ const LectureNotes = ({ lectureId }: LectureNotesProps) => {
       await shareNote({
         noteId: savedNote._id,
         studentIds: [], // Empty array means share with all students
-      });
+      }).unwrap();
 
       toast.success("Notes shared", {
         description: "Your notes have been shared with other students.",

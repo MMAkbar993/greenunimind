@@ -1,30 +1,24 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
+import {
+  createQuestion,
+  getQuestionsByLectureAndStudent,
+  getQuestionsByLecture,
+  answerQuestion,
+  updateQuestion,
+  deleteQuestion,
+} from '../controllers/questionController.js';
 
 const router = express.Router();
 
-router.post('/:studentId', protect, (req, res) => {
-  res.status(201).json({ success: true, data: { _id: Date.now().toString(), ...req.body, createdAt: new Date() } });
-});
+// Literal-prefixed routes must come before the generic /:id and
+// /:lectureId/:studentId patterns so Express doesn't swallow them.
+router.get('/lecture/:lectureId', protect, getQuestionsByLecture);
+router.patch('/answer/:id', protect, answerQuestion);
 
-router.get('/:lectureId/:studentId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.get('/lecture/:lectureId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.patch('/answer/:id', protect, (req, res) => {
-  res.json({ success: true, data: { _id: req.params.id, answer: req.body.answer } });
-});
-
-router.patch('/:id', protect, (req, res) => {
-  res.json({ success: true, data: { _id: req.params.id, ...req.body } });
-});
-
-router.delete('/:id', protect, (req, res) => {
-  res.json({ success: true, data: { message: 'Question deleted.' } });
-});
+router.post('/:studentId', protect, createQuestion);
+router.get('/:lectureId/:studentId', protect, getQuestionsByLectureAndStudent);
+router.patch('/:id', protect, updateQuestion);
+router.delete('/:id', protect, deleteQuestion);
 
 export default router;

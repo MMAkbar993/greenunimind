@@ -492,12 +492,16 @@ const CourseLayout = ({
                 <CloudinaryVideoPlayer
                   key={currentLectureId}
                   src={currentLecture.videoUrl}
+                  videoResolutions={currentLecture.videoResolutions}
+                  hlsUrl={currentLecture.hlsUrl}
                   initialPosition={lastPosition || 0}
                   onTimeUpdate={handleTimeUpdate}
                   onComplete={handleVideoComplete}
                   className="w-full"
                   poster={currentLecture.thumbnailUrl}
                   videoId={currentLectureId}
+                  enableDownload={!!currentLecture.videoUrl}
+                  enableAnalytics={true}
                   onReady={() => debugOnly.log('Cloudinary player ready')}
                 />
 

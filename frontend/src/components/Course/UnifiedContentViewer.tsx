@@ -52,16 +52,9 @@ const UnifiedContentViewer: React.FC<ContentViewerProps> = ({
   const contentItems = useMemo((): ContentItem[] => {
     const items: ContentItem[] = [];
 
-    // Video
-    if (lecture.videoUrl || lecture.hlsUrl || lecture.videoResolutions?.length) {
-      items.push({
-        type: 'video',
-        url: lecture.hlsUrl || lecture.videoUrl || lecture.videoResolutions?.[0]?.url || '',
-        title: `${lecture.lectureTitle} - Video`,
-        format: lecture.hlsUrl ? 'HLS' : 'MP4',
-        downloadable: enableDownload && !!lecture.videoUrl
-      });
-    }
+    // Video is intentionally excluded here — it's already played by the
+    // primary video player above the lecture header, so listing it again
+    // would just duplicate that player.
 
     // Audio
     if (lecture.audioUrl) {
@@ -302,17 +295,10 @@ const UnifiedContentViewer: React.FC<ContentViewerProps> = ({
     }
   }, []);
 
+  // Nothing left to show beyond the video (already playing above), so don't
+  // render an empty "materials" card.
   if (contentItems.length === 0) {
-    return (
-      <Card className={cn("w-full", className)}>
-        <CardContent className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No content available for this lecture</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   const activeItem = contentItems.find(item => item.type === activeContentState) || contentItems[0];

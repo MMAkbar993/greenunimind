@@ -1,26 +1,22 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
+import {
+  createOrUpdateNote,
+  getNoteByLectureAndStudent,
+  deleteNote,
+  getSharedNotes,
+  shareNote,
+} from '../controllers/noteController.js';
 
 const router = express.Router();
 
-router.post('/:studentId', protect, (req, res) => {
-  res.status(201).json({ success: true, data: { _id: Date.now().toString(), ...req.body, createdAt: new Date() } });
-});
+// Literal-prefixed routes must come before the generic /:lectureId/:studentId
+// pattern so Express doesn't swallow them.
+router.get('/shared/:lectureId', protect, getSharedNotes);
+router.post('/share/:noteId', protect, shareNote);
 
-router.get('/:lectureId/:studentId', protect, (req, res) => {
-  res.json({ success: true, data: null });
-});
-
-router.delete('/:id', protect, (req, res) => {
-  res.json({ success: true, data: { message: 'Note deleted.' } });
-});
-
-router.get('/shared/:lectureId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.post('/share/:noteId', protect, (req, res) => {
-  res.json({ success: true, data: { shared: true } });
-});
+router.post('/:studentId', protect, createOrUpdateNote);
+router.get('/:lectureId/:studentId', protect, getNoteByLectureAndStudent);
+router.delete('/:id', protect, deleteNote);
 
 export default router;
