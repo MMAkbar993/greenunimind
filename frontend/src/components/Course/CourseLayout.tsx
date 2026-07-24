@@ -505,8 +505,8 @@ const CourseLayout = ({
                   onReady={() => debugOnly.log('Cloudinary player ready')}
                 />
 
-                {/* Video title overlay */}
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-4 text-white transform transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                {/* Video title overlay - decorative only, must not block the player's own controls */}
+                <div className="absolute top-0 left-0 right-0 pointer-events-none bg-gradient-to-b from-black/80 via-black/40 to-transparent p-4 text-white transform transition-opacity duration-300 opacity-100 group-hover:opacity-0">
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <PlayCircle className="h-3.5 w-3.5 text-white" />
@@ -515,8 +515,9 @@ const CourseLayout = ({
                   </div>
                 </div>
 
-                {/* Video controls overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-4 pt-10 transform transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                {/* Video info overlay (duration/lecture count) - decorative only, sits where the
+                    player's own control bar renders, so it must not block clicks on it */}
+                <div className="absolute bottom-0 left-0 right-0 pointer-events-none bg-gradient-to-t from-black/80 to-transparent px-4 pb-4 pt-10 transform transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                   <div className="flex items-center justify-between text-white text-xs">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5">
