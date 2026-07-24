@@ -426,6 +426,17 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!playerRef.current) return;
 
+    // This listener is attached to `window` so shortcuts work whenever the
+    // player is on screen, but that means it must not hijack keystrokes
+    // meant for a text field (notes, questions, bookmark titles, etc.).
+    const target = event.target as HTMLElement | null;
+    const isTypingTarget =
+      !!target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable);
+    if (isTypingTarget) return;
+
     let seekBackward: number;
     let seekForward: number;
     let videoElement: HTMLVideoElement | null;
