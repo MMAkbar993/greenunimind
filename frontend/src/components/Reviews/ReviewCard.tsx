@@ -48,7 +48,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   const handleRespond = () => {
     if (onRespond) {
-      onRespond(review._id);
+      onRespond(review.id);
     }
   };
 
@@ -67,7 +67,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     <Card
       className={cn("dashboard-card hover:shadow-md transition-shadow duration-200", className)}
       role="article"
-      aria-label={`Review by ${review.student.name}`}
+      aria-label={`Review by ${review.studentName}`}
     >
       <CardContent className="p-6">
         <div className="space-y-4">
@@ -76,12 +76,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             <div className="flex items-start gap-3 flex-1">
               {/* Student Avatar */}
               <Avatar className="w-10 h-10">
-                <AvatarImage 
-                  src={review.student.profileImg} 
-                  alt={review.student.name}
+                <AvatarImage
+                  src={review.studentAvatar}
+                  alt={review.studentName}
                 />
                 <AvatarFallback className="bg-brand-accent text-brand-primary font-medium">
-                  {getInitials(review.student.name)}
+                  {getInitials(review.studentName)}
                 </AvatarFallback>
               </Avatar>
 
@@ -89,7 +89,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-medium text-gray-900 truncate">
-                    {review.student.name}
+                    {review.studentName}
                   </h4>
                   <Badge 
                     variant="secondary" 
@@ -115,7 +115,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 {showCourse && (
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <BookOpen className="w-3 h-3" />
-                    <span className="truncate">{review.course.title}</span>
+                    <span className="truncate">{review.courseName}</span>
                   </div>
                 )}
               </div>
@@ -195,7 +195,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               </div>
 
               <div className="text-xs text-gray-500">
-                Review #{review._id.slice(-6)}
+                Review #{review.id.slice(-6)}
               </div>
             </div>
           )}

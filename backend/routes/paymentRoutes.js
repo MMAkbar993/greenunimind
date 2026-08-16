@@ -11,10 +11,15 @@ import {
   getTeacherTransactions,
   getPayoutHistory,
   getPayoutPreferences,
+  updatePayoutPreferences,
+  createPayoutRequest,
   getEarningsGrowth,
   getRevenueChart,
   getFinancialSummary,
   getTopPerformingCourses,
+  exportFinancialData,
+  getAnalyticsPreferences,
+  updateAnalyticsPreferences,
 } from '../controllers/paymentController.js';
 
 const router = express.Router();
@@ -82,13 +87,11 @@ router.get('/teacher-payouts/:teacherId', ...teacherAuth, async (req, res) => {
   }
 });
 
-router.post('/payout-request/:teacherId', ...teacherAuth, (req, res) => {
-  res.json({ success: true, data: { message: 'Payout request submitted.', status: 'pending' } });
-});
+router.post('/payout-request/:teacherId', ...teacherAuth, createPayoutRequest);
 
-router.post('/export/:teacherId', ...teacherAuth, (req, res) => {
-  res.json({ success: true, data: [] });
-});
+router.get('/export/:teacherId', ...teacherAuth, exportFinancialData);
+router.get('/analytics-preferences/:teacherId', ...teacherAuth, getAnalyticsPreferences);
+router.put('/analytics-preferences/:teacherId', ...teacherAuth, updateAnalyticsPreferences);
 
 router.get('/connect-stripe-url/:teacherId', ...teacherAuth, (req, res) => {
   res.json({ success: true, data: { url: null, message: 'Use Stripe Connect onboarding flow.' } });
@@ -98,9 +101,7 @@ router.post('/exchange-stripe-code', ...teacherAuth, (req, res) => {
   res.json({ success: true, data: { connected: false, message: 'Use Stripe Connect onboarding flow.' } });
 });
 
-router.put('/payouts/preferences/:teacherId', ...teacherAuth, (req, res) => {
-  res.json({ success: true, data: { ...req.body, updated: true } });
-});
+router.put('/payouts/preferences/:teacherId', ...teacherAuth, updatePayoutPreferences);
 
 router.get('/payouts/details/:payoutId', ...teacherAuth, (req, res) => {
   res.json({ success: true, data: null });

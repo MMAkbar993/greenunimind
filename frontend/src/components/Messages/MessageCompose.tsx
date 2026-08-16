@@ -30,6 +30,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSaveDraftMutation, useSendMessageMutation } from '@/redux/features/message/messageApi';
 import { stopComposing, updateComposeDraft } from '@/redux/features/message/messageSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { useGetMeQuery } from '@/redux/features/auth/authApi';
+import { useGetEnrolledStudentsQuery } from '@/redux/features/teacher/teacherApi';
 import { ComposeMessageData, MessagePriority, MessageType } from '@/types/message';
 import { FileText, Image as ImageIcon, Paperclip, Save, Send, Users, Video, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';

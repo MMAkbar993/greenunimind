@@ -34,6 +34,7 @@ import {
   CardHeader
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import CourseReviewForm from "@/components/Reviews/CourseReviewForm";
 import "./styles.css";
 
 const CoursePage = () => {
@@ -704,6 +705,12 @@ const CoursePage = () => {
             </Link>
           </Button>
         </div>
+
+        {courseId && (
+          <div className="mt-8 sm:mt-12 max-w-2xl mx-auto">
+            <CourseReviewForm courseId={courseId} />
+          </div>
+        )}
       </div>
     </div>
   );

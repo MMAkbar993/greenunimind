@@ -172,12 +172,71 @@ const paymentApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getTeacherInvoices: builder.query({
+      query: (teacherId) => ({
+        url: `/invoices/teacher/${teacherId}`,
+        method: "GET",
+      }),
+      providesTags: ["analytics"],
+    }),
+
+    // Fetched as a blob (not a plain link) because these routes require the
+    // Bearer auth header - a bare `window.open(url)` can't attach it.
+    downloadInvoicePdf: builder.mutation<Blob, string>({
+      query: (transactionId) => ({
+        url: `/invoices/${transactionId}/pdf`,
+        method: "GET",
+        responseHandler: async (response: Response) => {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            return response.json();
+          }
+          return response.blob();
+        },
+        cache: "no-cache",
+      }),
+    }),
+
     getStudentInvoices: builder.query({
       query: (studentId) => ({
         url: `/invoices/student/${studentId}`,
         method: "GET",
       }),
       providesTags: ["analytics"],
+    }),
+
+    getAnalyticsPreferences: builder.query({
+      query: (teacherId) => ({
+        url: `/payments/analytics-preferences/${teacherId}`,
+        method: "GET",
+      }),
+      providesTags: ["analytics"],
+    }),
+
+    updateAnalyticsPreferences: builder.mutation({
+      query: ({ teacherId, ...data }) => ({
+        url: `/payments/analytics-preferences/${teacherId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["analytics"],
+    }),
+
+    getInvoicePreferences: builder.query({
+      query: (teacherId) => ({
+        url: `/invoices/preferences/${teacherId}`,
+        method: "GET",
+      }),
+      providesTags: ["analytics"],
+    }),
+
+    updateInvoicePreferences: builder.mutation({
+      query: ({ teacherId, ...data }) => ({
+        url: `/invoices/preferences/${teacherId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["analytics"],
     }),
 
     resendInvoiceEmail: builder.mutation({
@@ -399,6 +458,12 @@ export const {
   useResendInvoiceEmailMutation,
   useGetTeacherInvoiceStatsQuery,
   useBulkGenerateInvoicesMutation,
+  useGetTeacherInvoicesQuery,
+  useDownloadInvoicePdfMutation,
+  useGetInvoicePreferencesQuery,
+  useUpdateInvoicePreferencesMutation,
+  useGetAnalyticsPreferencesQuery,
+  useUpdateAnalyticsPreferencesMutation,
 
   // Stripe Connect
   useCreateStripeAccountMutation,

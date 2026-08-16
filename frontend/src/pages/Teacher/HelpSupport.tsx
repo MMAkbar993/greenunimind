@@ -27,6 +27,14 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 // Import Help & Support components (to be created)
@@ -254,10 +262,26 @@ const HelpSupport: React.FC<HelpSupportPageProps> = ({
                   Search across all help content including FAQs, articles, videos, and downloads
                 </div>
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Search in</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {tabs
+                    .filter((tab) => tab.id !== 'overview' && tab.id !== 'contact')
+                    .map((tab) => (
+                      <DropdownMenuItem key={tab.id} onClick={() => handleTabChange(tab.id)}>
+                        {tab.icon}
+                        <span className="ml-2">{tab.label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {debouncedSearchQuery && (

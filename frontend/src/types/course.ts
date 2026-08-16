@@ -46,6 +46,8 @@ export interface ICourse {
   status: string;
   courseThumbnailPublicId?: string;
   isFree?: string;
+  averageRating?: number;
+  totalReviews?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

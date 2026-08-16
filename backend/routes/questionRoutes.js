@@ -4,6 +4,7 @@ import {
   createQuestion,
   getQuestionsByLectureAndStudent,
   getQuestionsByLecture,
+  getQuestionsByTeacher,
   answerQuestion,
   updateQuestion,
   deleteQuestion,
@@ -14,6 +15,7 @@ const router = express.Router();
 // Literal-prefixed routes must come before the generic /:id and
 // /:lectureId/:studentId patterns so Express doesn't swallow them.
 router.get('/lecture/:lectureId', protect, getQuestionsByLecture);
+router.get('/teacher/:teacherId', protect, getQuestionsByTeacher);
 router.patch('/answer/:id', protect, answerQuestion);
 
 router.post('/:studentId', protect, createQuestion);

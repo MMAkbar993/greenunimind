@@ -31,6 +31,7 @@ import TransactionAnalyticsPage from "@/pages/Teacher/TransactionAnalyticsPage";
 import Settings from "@/pages/Teacher/Settings";
 import Students from "@/pages/Teacher/Students";
 import Messages from "@/pages/Teacher/Messages";
+import Questions from "@/pages/Teacher/Questions";
 import Analytics from "@/pages/Teacher/Analytics";
 import Reviews from "@/pages/Teacher/Reviews";
 
@@ -278,6 +279,10 @@ const router = createBrowserRouter([
       {
         path: "messages",
         element: <Messages />,
+      },
+      {
+        path: "questions",
+        element: <Questions />,
       },
       {
         path: "analytics",

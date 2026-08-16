@@ -15,19 +15,43 @@ import {
   PieChart
 } from 'lucide-react';
 import FinancialAnalyticsDashboard from '@/components/Analytics/FinancialAnalyticsDashboard';
+import { Switch } from '@/components/ui/switch';
 import { useFinancialAnalytics, useFinancialDataExport } from '@/hooks/useFinancialAnalytics';
 import { useGetMeQuery } from '@/redux/features/auth/authApi';
-import { useCheckStripeAccountStatusQuery } from '@/redux/features/payment/payment.api';
+import {
+  useCheckStripeAccountStatusQuery,
+  useGetAnalyticsPreferencesQuery,
+  useUpdateAnalyticsPreferencesMutation,
+} from '@/redux/features/payment/payment.api';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const FinancialAnalytics: React.FC = () => {
   const { data: userData } = useGetMeQuery(undefined);
   const teacherId = userData?.data?._id;
-  
+
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Get Stripe account status
   const { data: stripeStatus } = useCheckStripeAccountStatusQuery(teacherId, { skip: !teacherId });
+
+  // Analytics preferences (Settings tab)
+  const { data: analyticsPreferencesData } = useGetAnalyticsPreferencesQuery(teacherId, { skip: !teacherId });
+  const [updateAnalyticsPreferences, { isLoading: isSavingAnalyticsPreferences }] =
+    useUpdateAnalyticsPreferencesMutation();
+  const analyticsPreferences = analyticsPreferencesData?.data;
+
+  const handleToggleAnalyticsPreference = async (
+    key: 'realtimeUpdatesEnabled' | 'weeklyEmailReports',
+    value: boolean
+  ) => {
+    try {
+      await updateAnalyticsPreferences({ teacherId, [key]: value }).unwrap();
+      toast.success('Preference updated');
+    } catch (error) {
+      toast.error('Failed to update preference');
+    }
+  };
 
   // Get financial analytics data
   const {
@@ -38,7 +62,7 @@ const FinancialAnalytics: React.FC = () => {
     isLoading,
     error,
     refetch
-  } = useFinancialAnalytics('30d');
+  } = useFinancialAnalytics('30d', analyticsPreferences?.realtimeUpdatesEnabled ?? true);
 
   // Export functionality
   const { exportData, isExporting } = useFinancialDataExport();
@@ -366,27 +390,35 @@ const FinancialAnalytics: React.FC = () => {
                       <h4 className="font-medium text-gray-900">Real-time Updates</h4>
                       <p className="text-sm text-gray-600">Enable real-time earnings updates</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Configure
-                    </Button>
+                    <Switch
+                      checked={analyticsPreferences?.realtimeUpdatesEnabled ?? true}
+                      disabled={isSavingAnalyticsPreferences}
+                      onCheckedChange={(checked) =>
+                        handleToggleAnalyticsPreference('realtimeUpdatesEnabled', checked)
+                      }
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h4 className="font-medium text-gray-900">Email Reports</h4>
                       <p className="text-sm text-gray-600">Receive weekly financial summaries</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Setup
-                    </Button>
+                    <Switch
+                      checked={analyticsPreferences?.weeklyEmailReports ?? false}
+                      disabled={isSavingAnalyticsPreferences}
+                      onCheckedChange={(checked) =>
+                        handleToggleAnalyticsPreference('weeklyEmailReports', checked)
+                      }
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h4 className="font-medium text-gray-900">Data Export</h4>
-                      <p className="text-sm text-gray-600">Configure automatic data exports</p>
+                      <p className="text-sm text-gray-600">Download your transaction and payout data</p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab('reports')}>
                       Manage
                     </Button>
                   </div>

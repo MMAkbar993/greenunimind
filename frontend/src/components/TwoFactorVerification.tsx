@@ -15,7 +15,7 @@ interface TwoFactorVerificationProps {
 
 const TwoFactorVerification = ({ email, onCancel }: TwoFactorVerificationProps) => {
   const [verificationCode, setVerificationCode] = useState("");
-  const [verifyTwoFactorLogin, { isLoading }] = useVerifyTwoFactorLoginMutation();
+  const [verifyTwoFactorLogin, { isLoading }] = useVerifyLoginTwoFactorMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 

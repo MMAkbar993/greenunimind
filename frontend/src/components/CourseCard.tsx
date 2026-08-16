@@ -93,9 +93,8 @@ const CourseCard = ({
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  // Mock rating data (you can replace this with actual rating data from reviews)
-  const mockRating = 4.5;
-  const mockReviewCount = Math.floor(Math.random() * 500) + 50;
+  const rating = course.averageRating || 0;
+  const reviewCount = course.totalReviews || 0;
 
   return (
     <motion.div
@@ -146,26 +145,28 @@ const CourseCard = ({
       {/* Course Content */}
       <div className="p-5 flex flex-col flex-grow">
         {/* Rating */}
-        <div className="flex items-center mb-3">
-          <div className="flex items-center">
-            <span className="font-bold text-sm text-gray-900 mr-2">{mockRating.toFixed(1)}</span>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-4 h-4 ${
-                    star <= Math.floor(mockRating)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : star - 0.5 <= mockRating
+        {reviewCount > 0 && (
+          <div className="flex items-center mb-3">
+            <div className="flex items-center">
+              <span className="font-bold text-sm text-gray-900 mr-2">{rating.toFixed(1)}</span>
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-4 h-4 ${
+                      star <= Math.floor(rating)
                         ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-300"
-                  }`}
-                />
-              ))}
+                        : star - 0.5 <= rating
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
+            <span className="text-xs text-gray-500 ml-2">({reviewCount.toLocaleString()} reviews)</span>
           </div>
-          <span className="text-xs text-gray-500 ml-2">({mockReviewCount.toLocaleString()} reviews)</span>
-        </div>
+        )}
 
         {/* Course Title */}
         <h3 className="font-bold text-gray-900 text-xl mb-2 line-clamp-2 hover:text-green-600 transition-colors">

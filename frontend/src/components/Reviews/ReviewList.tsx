@@ -92,7 +92,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
       <div className="space-y-4">
         {reviews.map((review) => (
           <ReviewCard
-            key={review._id}
+            key={review.id}
             review={review}
             showCourse={showCourse}
             showActions={showActions}

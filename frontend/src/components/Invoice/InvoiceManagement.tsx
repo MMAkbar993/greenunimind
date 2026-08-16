@@ -40,6 +40,11 @@ interface InvoiceManagementProps {
   isLoading?: boolean;
   onRefresh: () => void;
   onResendEmail: (invoiceId: string) => void;
+  // Both take the transaction id (needed to fetch the PDF, which requires
+  // an authenticated request, not a plain link) plus the invoice number
+  // (used as the downloaded filename).
+  onViewInvoice: (transactionId: string) => void;
+  onDownloadInvoice: (transactionId: string, invoiceId: string) => void;
   className?: string;
 }
 
@@ -48,6 +53,8 @@ const InvoiceManagement: React.FC<InvoiceManagementProps> = ({
   isLoading = false,
   onRefresh,
   onResendEmail,
+  onViewInvoice,
+  onDownloadInvoice,
   className
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,8 +156,8 @@ const InvoiceManagement: React.FC<InvoiceManagementProps> = ({
       case 'download':
         selectedInvoices.forEach(invoiceId => {
           const invoice = invoices.find(i => i.id === invoiceId);
-          if (invoice?.pdfUrl) {
-            window.open(invoice.pdfUrl, '_blank');
+          if (invoice) {
+            onDownloadInvoice(invoice.transactionId, invoice.invoiceId);
           }
         });
         break;
@@ -368,16 +375,16 @@ const InvoiceManagement: React.FC<InvoiceManagementProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(invoice.invoiceUrl, '_blank')}
+                      onClick={() => onViewInvoice(invoice.transactionId)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       View
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(invoice.pdfUrl, '_blank')}
+                      onClick={() => onDownloadInvoice(invoice.transactionId, invoice.invoiceId)}
                     >
                       <Download className="w-4 h-4 mr-2" />
                       PDF

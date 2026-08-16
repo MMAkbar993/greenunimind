@@ -401,6 +401,7 @@ export const baseApi = createApi({
     'review-dashboard',
     'review-insights',
     'review-trends',
+    'my-review',
     'impact',
     'achievements',
   ],

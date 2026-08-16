@@ -26,8 +26,8 @@ export const useReviewsPerformance = ({
         const searchTerm = filters.search.toLowerCase();
         const matchesSearch = 
           review.comment.toLowerCase().includes(searchTerm) ||
-          review.student.name.toLowerCase().includes(searchTerm) ||
-          review.course.title.toLowerCase().includes(searchTerm);
+          review.studentName.toLowerCase().includes(searchTerm) ||
+          review.courseName.toLowerCase().includes(searchTerm);
         
         if (!matchesSearch) return false;
       }
@@ -39,7 +39,7 @@ export const useReviewsPerformance = ({
 
       // Course filter
       if (filters.courseId) {
-        if (review.course._id !== filters.courseId) return false;
+        if (review.courseId !== filters.courseId) return false;
       }
 
       // Date range filter
@@ -76,7 +76,7 @@ export const useReviewsPerformance = ({
           comparison = a.rating - b.rating;
           break;
         case 'course':
-          comparison = a.course.title.localeCompare(b.course.title);
+          comparison = a.courseName.localeCompare(b.courseName);
           break;
         case 'createdAt':
         default:

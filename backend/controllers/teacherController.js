@@ -9,7 +9,10 @@ export const getEnrolledStudents = async (req, res) => {
   try {
     const { teacherId } = req.params;
     const currentUserId = req.user._id.toString();
-    if (currentUserId !== teacherId && req.user.role !== 'teacher') {
+    // Only the teacher themselves may view their own roster - this was
+    // previously `&&`, which let ANY authenticated teacher view ANY other
+    // teacher's enrolled students (isMe OR isAnyTeacher, not isMe AND isTeacher).
+    if (currentUserId !== teacherId || req.user.role !== 'teacher') {
       return res.status(403).json({ success: false, message: 'Access denied.' });
     }
 

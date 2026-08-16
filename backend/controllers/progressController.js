@@ -13,7 +13,10 @@ export const getEnrolledCoursesProgress = async (req, res) => {
   try {
     const { studentId } = req.params;
     const currentUserId = req.user._id.toString();
-    if (currentUserId !== studentId && req.user.role !== 'teacher') {
+    // A student's full course list can span courses from different
+    // teachers, so there's no single "owns this" check that applies here -
+    // only the student themselves may view it.
+    if (currentUserId !== studentId) {
       return res.status(403).json({ success: false, message: 'Access denied.' });
     }
 
@@ -59,8 +62,15 @@ export const getCourseProgress = async (req, res) => {
   try {
     const { studentId, courseId } = req.params;
     const currentUserId = req.user._id.toString();
-    if (currentUserId !== studentId && req.user.role !== 'teacher') {
-      return res.status(403).json({ success: false, message: 'Access denied.' });
+    if (currentUserId !== studentId) {
+      // Not the student - only allow a teacher who actually owns this course.
+      if (req.user.role !== 'teacher') {
+        return res.status(403).json({ success: false, message: 'Access denied.' });
+      }
+      const ownsCourse = await Course.exists({ _id: courseId, creator: currentUserId });
+      if (!ownsCourse) {
+        return res.status(403).json({ success: false, message: 'Access denied.' });
+      }
     }
 
     const progress = await Progress.findOne({ user: studentId, course: courseId }).lean();

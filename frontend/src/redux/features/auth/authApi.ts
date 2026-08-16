@@ -345,6 +345,31 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["getMe"],
+      // Same flattening as `login` - this completes a login that was
+      // paused for a 2FA code, so it needs to store tokens the same way.
+      transformResponse: (response) => {
+        if (response.data.refreshToken) {
+          localStorage.setItem("refreshToken", response.data.refreshToken);
+        }
+        if (response.data.accessToken) {
+          localStorage.setItem("accessToken", response.data.accessToken);
+        }
+
+        const user = {
+          ...response.data.user,
+          photoUrl: response.data.user.profileImg ?? null,
+          role: response.data.user.role,
+        };
+
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userData", JSON.stringify(user));
+
+        return {
+          user,
+          token: response.data.accessToken,
+        };
+      },
     }),
     disableTwoFactor: builder.mutation({
       query: (data) => ({

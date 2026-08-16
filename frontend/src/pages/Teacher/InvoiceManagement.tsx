@@ -11,15 +11,21 @@ import {
   RefreshCw
 } from 'lucide-react';
 import InvoiceManagement from '@/components/Invoice/InvoiceManagement';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useGetMeQuery } from '@/redux/features/auth/authApi';
 import {
-  useGetTeacherTransactionsQuery,
+  useGetTeacherInvoicesQuery,
   useGetTeacherInvoiceStatsQuery,
   useResendInvoiceEmailMutation,
-  useGenerateInvoiceMutation,
-  useCheckStripeAccountStatusQuery
+  useDownloadInvoicePdfMutation,
+  useCheckStripeAccountStatusQuery,
+  useGetInvoicePreferencesQuery,
+  useUpdateInvoicePreferencesMutation
 } from '@/redux/features/payment/payment.api';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const TeacherInvoiceManagement: React.FC = () => {
   const { data: userData } = useGetMeQuery(undefined);
@@ -31,12 +37,12 @@ const TeacherInvoiceManagement: React.FC = () => {
   // Get Stripe account status
   const { data: stripeStatus } = useCheckStripeAccountStatusQuery(teacherId, { skip: !teacherId });
 
-  // Get teacher transactions (which include invoice data)
+  // Get teacher invoices (auto-generated from completed transactions)
   const {
-    data: transactionsData,
+    data: invoicesData,
     isLoading: isTransactionsLoading,
     refetch: refetchTransactions
-  } = useGetTeacherTransactionsQuery({ teacherId, period: selectedPeriod }, { skip: !teacherId });
+  } = useGetTeacherInvoicesQuery(teacherId, { skip: !teacherId });
 
   // Get invoice statistics
   const {
@@ -47,26 +53,38 @@ const TeacherInvoiceManagement: React.FC = () => {
 
   // Mutations
   const [resendInvoiceEmail] = useResendInvoiceEmailMutation();
-  const [generateInvoice] = useGenerateInvoiceMutation();
+  const [downloadInvoicePdf] = useDownloadInvoicePdfMutation();
+
+  // Invoice preferences (Settings tab)
+  const { data: preferencesData } = useGetInvoicePreferencesQuery(teacherId, { skip: !teacherId });
+  const [updateInvoicePreferences, { isLoading: isSavingPreferences }] = useUpdateInvoicePreferencesMutation();
+  const preferences = preferencesData?.data;
+  const [businessNameDraft, setBusinessNameDraft] = useState('');
+  const [isEditingBusinessName, setIsEditingBusinessName] = useState(false);
+
+  const handleTogglePreference = async (key: 'autoGenerate' | 'emailNotificationsEnabled', value: boolean) => {
+    try {
+      await updateInvoicePreferences({ teacherId, [key]: value }).unwrap();
+      toast.success('Preference updated');
+    } catch (error) {
+      toast.error('Failed to update preference');
+    }
+  };
+
+  const handleSaveBusinessName = async () => {
+    try {
+      await updateInvoicePreferences({ teacherId, businessName: businessNameDraft }).unwrap();
+      toast.success('Invoice template updated');
+      setIsEditingBusinessName(false);
+    } catch (error) {
+      toast.error('Failed to update invoice template');
+    }
+  };
 
   const isStripeConnected = stripeStatus?.data?.isConnected;
   const isStripeVerified = stripeStatus?.data?.isVerified;
 
-  // Transform transactions data to invoice format
-  const invoices = transactionsData?.data?.map((transaction: any) => ({
-    id: transaction._id,
-    transactionId: transaction._id,
-    invoiceId: transaction.stripeInvoiceId || 'N/A',
-    invoiceUrl: transaction.stripeInvoiceUrl || '',
-    pdfUrl: transaction.stripePdfUrl || '',
-    status: transaction.invoiceStatus || transaction.status || 'paid',
-    amount: transaction.teacherEarning || transaction.totalAmount,
-    courseTitle: transaction.courseId?.title || 'Unknown Course',
-    studentName: `${transaction.studentId?.name?.firstName || ''} ${transaction.studentId?.name?.lastName || ''}`.trim() || 'Unknown Student',
-    studentEmail: transaction.studentId?.email || '',
-    teacherName: `${userData?.data?.name?.firstName || ''} ${userData?.data?.name?.lastName || ''}`.trim(),
-    created: transaction.createdAt,
-  })) || [];
+  const invoices = invoicesData?.data || [];
 
   const handleRefresh = () => {
     refetchTransactions();
@@ -75,35 +93,48 @@ const TeacherInvoiceManagement: React.FC = () => {
 
   const handleResendEmail = async (invoiceId: string) => {
     try {
-      const transaction = invoices.find((inv: any) => inv.invoiceId === invoiceId);
-      if (transaction) {
-        await resendInvoiceEmail(transaction.transactionId).unwrap();
-        // Show success message (you might want to add a toast notification here)
-        console.log('Invoice email resent successfully');
+      const invoice = invoices.find((inv: any) => inv.invoiceId === invoiceId);
+      if (invoice) {
+        await resendInvoiceEmail(invoice.transactionId).unwrap();
+        toast.success('Invoice email sent');
       }
     } catch (error) {
-      console.error('Failed to resend invoice email:', error);
+      toast.error('Failed to resend invoice email');
     }
   };
 
-  const handleGenerateInvoice = async (transactionId: string) => {
+  const fetchInvoiceBlob = async (transactionId: string) => {
+    const result = await downloadInvoicePdf(transactionId).unwrap();
+    if (!(result instanceof Blob)) {
+      throw new Error((result as { message?: string })?.message || 'Failed to generate invoice PDF.');
+    }
+    return result;
+  };
+
+  const handleViewInvoice = async (transactionId: string) => {
     try {
-      const transaction = transactionsData?.data?.find((t: any) => t._id === transactionId);
-      if (transaction && teacherId) {
-        await generateInvoice({
-          transactionId,
-          studentId: transaction.studentId._id,
-          courseId: transaction.courseId._id,
-          amount: transaction.totalAmount,
-          teacherStripeAccountId: stripeStatus?.data?.accountId || '',
-        }).unwrap();
-        
-        // Refresh data after generating invoice
-        handleRefresh();
-        console.log('Invoice generated successfully');
-      }
+      const blob = await fetchInvoiceBlob(transactionId);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (error) {
-      console.error('Failed to generate invoice:', error);
+      toast.error('Failed to open invoice');
+    }
+  };
+
+  const handleDownloadInvoice = async (transactionId: string, invoiceId: string) => {
+    try {
+      const blob = await fetchInvoiceBlob(transactionId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${invoiceId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error('Failed to download invoice');
     }
   };
 
@@ -284,7 +315,8 @@ const TeacherInvoiceManagement: React.FC = () => {
               isLoading={isTransactionsLoading}
               onRefresh={handleRefresh}
               onResendEmail={handleResendEmail}
-              onGenerateInvoice={handleGenerateInvoice}
+              onViewInvoice={handleViewInvoice}
+              onDownloadInvoice={handleDownloadInvoice}
             />
           </TabsContent>
 
@@ -300,29 +332,68 @@ const TeacherInvoiceManagement: React.FC = () => {
                       <h4 className="font-medium text-gray-900">Automatic Invoice Generation</h4>
                       <p className="text-sm text-gray-600">Automatically generate invoices for new course purchases</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Enabled
-                    </Button>
+                    <Switch
+                      checked={preferences?.autoGenerate ?? true}
+                      disabled={isSavingPreferences}
+                      onCheckedChange={(checked) => handleTogglePreference('autoGenerate', checked)}
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h4 className="font-medium text-gray-900">Email Notifications</h4>
                       <p className="text-sm text-gray-600">Send invoice emails to students automatically</p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Configure
-                    </Button>
+                    <Switch
+                      checked={preferences?.emailNotificationsEnabled ?? true}
+                      disabled={isSavingPreferences}
+                      onCheckedChange={(checked) => handleTogglePreference('emailNotificationsEnabled', checked)}
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-medium text-gray-900">Invoice Template</h4>
-                      <p className="text-sm text-gray-600">Customize your invoice template and branding</p>
+                      <p className="text-sm text-gray-600">Customize the business name shown on your invoices</p>
+                      {isEditingBusinessName ? (
+                        <div className="flex items-center gap-2 mt-3">
+                          <div className="flex-1 max-w-sm">
+                            <Label htmlFor="businessName" className="sr-only">Business name</Label>
+                            <Input
+                              id="businessName"
+                              placeholder="GreenUniMind AI"
+                              value={businessNameDraft}
+                              onChange={(e) => setBusinessNameDraft(e.target.value)}
+                            />
+                          </div>
+                          <Button size="sm" onClick={handleSaveBusinessName} disabled={isSavingPreferences}>
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsEditingBusinessName(false)}
+                            disabled={isSavingPreferences}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : preferences?.businessName ? (
+                        <p className="text-sm text-gray-900 font-medium mt-1">"{preferences.businessName}"</p>
+                      ) : null}
                     </div>
-                    <Button variant="outline" size="sm">
-                      Customize
-                    </Button>
+                    {!isEditingBusinessName && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setBusinessNameDraft(preferences?.businessName || '');
+                          setIsEditingBusinessName(true);
+                        }}
+                      >
+                        Customize
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

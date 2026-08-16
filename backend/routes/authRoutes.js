@@ -10,6 +10,10 @@ import {
   resetPassword,
   changePassword,
   getRateLimitStatus,
+  setupTwoFactor,
+  verifyTwoFactor,
+  verifyLoginTwoFactor,
+  disableTwoFactor,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -26,17 +30,9 @@ router.post('/reset-password', resetPassword);
 router.post('/change-password', protect, changePassword);
 router.get('/rate-limit-status', getRateLimitStatus);
 
-router.get('/2fa/setup/:userId', protect, (req, res) => {
-  res.json({ success: true, data: { enabled: false, qrCode: null, secret: null } });
-});
-router.post('/2fa/verify', protect, (req, res) => {
-  res.json({ success: true, data: { verified: true } });
-});
-router.post('/2fa/login-verify', (req, res) => {
-  res.json({ success: true, data: { verified: true } });
-});
-router.post('/2fa/disable', protect, (req, res) => {
-  res.json({ success: true, data: { disabled: true } });
-});
+router.get('/2fa/setup/:userId', protect, setupTwoFactor);
+router.post('/2fa/verify', protect, verifyTwoFactor);
+router.post('/2fa/login-verify', verifyLoginTwoFactor);
+router.post('/2fa/disable', protect, disableTwoFactor);
 
 export default router;

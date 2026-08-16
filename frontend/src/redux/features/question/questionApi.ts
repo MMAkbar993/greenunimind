@@ -2,6 +2,18 @@ import { baseApi } from "@/redux/api/baseApi";
 import { TResponseRedux } from "@/types/global";
 import { IQuestion, setError, setLoading, setQuestions } from "./questionSlice";
 
+export interface ITeacherQuestion extends IQuestion {
+  student: {
+    _id: string;
+    name: { firstName: string; lastName: string };
+    email: string;
+    profileImg?: string;
+  };
+  lectureTitle: string;
+  courseId: string;
+  courseTitle: string;
+}
+
 export const questionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createQuestion: builder.mutation({
@@ -61,6 +73,20 @@ export const questionApi = baseApi.injectEndpoints({
       transformResponse: (response: TResponseRedux<IQuestion[]>) => ({
         data: response.data,
       }),
+      providesTags: ["questions"],
+    }),
+
+    getQuestionsByTeacher: builder.query<
+      { questions: ITeacherQuestion[]; unansweredCount: number },
+      string
+    >({
+      query: (teacherId) => ({
+        url: `/questions/teacher/${teacherId}`,
+        method: "GET",
+      }),
+      transformResponse: (
+        response: TResponseRedux<{ questions: ITeacherQuestion[]; unansweredCount: number }>
+      ) => response.data,
       providesTags: ["questions"],
     }),
 
@@ -125,6 +151,7 @@ export const {
   useCreateQuestionMutation,
   useGetQuestionsByLectureAndStudentQuery,
   useGetQuestionsByLectureQuery,
+  useGetQuestionsByTeacherQuery,
   useAnswerQuestionMutation,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,

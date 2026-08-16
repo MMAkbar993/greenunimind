@@ -179,7 +179,11 @@ const skipPreflight = (req) => req.method === 'OPTIONS';
 
 const apiLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-  max: parseInt(process.env.RATE_LIMIT_MAX || '200', 10),
+  // Shared per-IP across every user behind that IP (NAT/office wifi/mobile
+  // carrier), and every page load fans out into several calls (getMe,
+  // categories, published-courses, progress, ...), so 200/15min was
+  // exhausted by completely normal browsing, not abuse.
+  max: parseInt(process.env.RATE_LIMIT_MAX || '1000', 10),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },

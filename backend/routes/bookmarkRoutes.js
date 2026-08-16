@@ -1,38 +1,28 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
+import {
+  createBookmark,
+  getBookmarksByLectureAndStudent,
+  updateBookmark,
+  deleteBookmark,
+  getSharedBookmarks,
+  shareBookmark,
+  getBookmarksByCategory,
+  getBookmarksByTags,
+} from '../controllers/bookmarkController.js';
 
 const router = express.Router();
 
-router.post('/:studentId', protect, (req, res) => {
-  res.status(201).json({ success: true, data: { _id: Date.now().toString(), ...req.body, createdAt: new Date() } });
-});
+// Literal-prefixed routes must come before the generic /:id and
+// /:lectureId/:studentId patterns so Express doesn't swallow them.
+router.get('/shared/:lectureId', protect, getSharedBookmarks);
+router.post('/share/:bookmarkId', protect, shareBookmark);
+router.get('/category/:studentId/:category', protect, getBookmarksByCategory);
+router.post('/tags/:studentId', protect, getBookmarksByTags);
 
-router.get('/:lectureId/:studentId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.patch('/:id', protect, (req, res) => {
-  res.json({ success: true, data: { _id: req.params.id, ...req.body } });
-});
-
-router.delete('/:id', protect, (req, res) => {
-  res.json({ success: true, data: { message: 'Bookmark deleted.' } });
-});
-
-router.get('/shared/:lectureId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.post('/share/:bookmarkId', protect, (req, res) => {
-  res.json({ success: true, data: { shared: true } });
-});
-
-router.get('/category/:studentId/:category', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
-
-router.post('/tags/:studentId', protect, (req, res) => {
-  res.json({ success: true, data: [] });
-});
+router.post('/:studentId', protect, createBookmark);
+router.get('/:lectureId/:studentId', protect, getBookmarksByLectureAndStudent);
+router.patch('/:id', protect, updateBookmark);
+router.delete('/:id', protect, deleteBookmark);
 
 export default router;

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useGetMeQuery, useLogoutMutation } from '@/redux/features/auth/authApi';
 import { logout } from '@/redux/features/auth/authSlice';
 import { useGetMessageStatsQuery } from '@/redux/features/message/messageApi';
+import { useGetQuestionsByTeacherQuery } from '@/redux/features/question/questionApi';
 import { useAppDispatch } from '@/redux/hooks';
 import {
   BarChart3,
@@ -31,6 +32,7 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  MessageCircleQuestion,
   Search,
   Settings,
   Star,
@@ -92,6 +94,11 @@ const DashboardSidebar: React.FC = () => {
       pollingInterval: 30000,
     }
   );
+
+  const { data: questionsData } = useGetQuestionsByTeacherQuery(userId || '', {
+    skip: !userId,
+    pollingInterval: 30000,
+  });
 
   // Close popover when sheet is closed
   useEffect(() => {
@@ -176,6 +183,14 @@ const DashboardSidebar: React.FC = () => {
         description: 'Student communications',
         group: 'main',
       },
+      {
+        path: '/teacher/questions',
+        name: 'Questions',
+        icon: <MessageCircleQuestion className="sidebar-nav-icon" />,
+        badge: questionsData?.unansweredCount || 0,
+        description: 'Answer student questions',
+        group: 'main',
+      },
 
       // Settings
       {
@@ -193,7 +208,7 @@ const DashboardSidebar: React.FC = () => {
         group: 'settings',
       },
     ],
-    [messageStats?.data?.unreadMessages]
+    [messageStats?.data?.unreadMessages, questionsData?.unansweredCount]
   );
 
   // Filter navigation items based on search

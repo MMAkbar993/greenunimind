@@ -7,6 +7,7 @@ export interface IStudentCourseProgress {
   progress: number;
   completedLectures: number;
   totalLectures: number;
+  enrolledAt?: string;
 }
 
 export interface IEnrolledStudent {

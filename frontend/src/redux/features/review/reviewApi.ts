@@ -6,9 +6,9 @@ import {
   ReviewStats,
   PaginatedReviewsResponse,
   ReviewDashboardData,
-  ReviewResponse,
   ReviewExportOptions,
-  ReviewInsight
+  ReviewInsight,
+  IReview
 } from "@/types/review";
 
 export const reviewApi = baseApi.injectEndpoints({
@@ -140,7 +140,7 @@ export const reviewApi = baseApi.injectEndpoints({
 
     // Respond to a review
     respondToReview: builder.mutation<
-      ReviewResponse,
+      IReview,
       { reviewId: string; response: string }
     >({
       query: ({ reviewId, response }) => ({
@@ -148,21 +148,26 @@ export const reviewApi = baseApi.injectEndpoints({
         method: "POST",
         body: { response },
       }),
-      transformResponse: (response: TResponseRedux<ReviewResponse>) => response.data,
+      transformResponse: (response: TResponseRedux<IReview>) => response.data,
       invalidatesTags: ["reviews", "teacher-reviews", "review-analytics"],
     }),
 
-    // Export reviews
-    exportReviews: builder.mutation<
-      { downloadUrl: string },
-      { teacherId: string; options: ReviewExportOptions }
-    >({
-      query: ({ teacherId, options }) => ({
+    // Export reviews - fetched as a blob (not a plain link/JSON URL) because
+    // this route needs the Bearer auth header, same pattern as invoice/
+    // payment CSV exports.
+    exportReviews: builder.mutation<Blob, { teacherId: string; options?: ReviewExportOptions }>({
+      query: ({ teacherId }) => ({
         url: `/reviews/teacher/${teacherId}/export`,
         method: "POST",
-        body: options,
+        responseHandler: async (response: Response) => {
+          const contentType = response.headers.get("content-type") || "";
+          if (contentType.includes("application/json")) {
+            return response.json();
+          }
+          return response.blob();
+        },
+        cache: "no-cache",
       }),
-      transformResponse: (response: TResponseRedux<{ downloadUrl: string }>) => response.data,
     }),
 
     // Get review insights
@@ -180,15 +185,41 @@ export const reviewApi = baseApi.injectEndpoints({
 
     // Mark review as helpful
     markReviewHelpful: builder.mutation<
-      { success: boolean },
+      { success: boolean; helpful: number; isHelpfulByMe: boolean },
       { reviewId: string }
     >({
       query: ({ reviewId }) => ({
         url: `/reviews/${reviewId}/helpful`,
         method: "POST",
       }),
-      transformResponse: (response: TResponseRedux<{ success: boolean }>) => response.data,
+      transformResponse: (
+        response: TResponseRedux<{ success: boolean; helpful: number; isHelpfulByMe: boolean }>
+      ) => response.data,
       invalidatesTags: ["reviews", "teacher-reviews"],
+    }),
+
+    // Create or edit the current student's review for a course
+    createOrUpdateReview: builder.mutation<
+      IReview,
+      { courseId: string; rating: number; comment?: string }
+    >({
+      query: ({ courseId, ...data }) => ({
+        url: `/reviews/course/${courseId}`,
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: TResponseRedux<IReview>) => response.data,
+      invalidatesTags: ["reviews", "course-reviews", "my-review"],
+    }),
+
+    // Get the current student's own review for a course (to prefill the edit form)
+    getMyReviewForCourse: builder.query<IReview | null, string>({
+      query: (courseId) => ({
+        url: `/reviews/course/${courseId}/mine`,
+        method: "GET",
+      }),
+      transformResponse: (response: TResponseRedux<IReview | null>) => response.data,
+      providesTags: ["my-review"],
     }),
 
     // Report review
@@ -232,4 +263,6 @@ export const {
   useMarkReviewHelpfulMutation,
   useReportReviewMutation,
   useGetReviewTrendsQuery,
+  useCreateOrUpdateReviewMutation,
+  useGetMyReviewForCourseQuery,
 } = reviewApi;

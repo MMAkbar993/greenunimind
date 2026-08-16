@@ -108,10 +108,9 @@ const UdemyStyleCourseCard = ({
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  // Mock rating data (replace with actual data)
-  const mockRating = 4.5;
-  const mockReviewCount = Math.floor(Math.random() * 500) + 50;
-  const mockStudentCount = Math.floor(Math.random() * 10000) + 1000;
+  const rating = course.averageRating || 0;
+  const reviewCount = course.totalReviews || 0;
+  const studentCount = course.totalEnrollment || 0;
 
   // Get instructor name
   const instructorName = typeof course.creator === 'object' && course.creator && 'name' in course.creator
@@ -170,7 +169,7 @@ const UdemyStyleCourseCard = ({
         </div>
 
         {/* Bestseller badge (conditional) */}
-        {mockStudentCount > 5000 && (
+        {studentCount > 5000 && (
           <div className="absolute bottom-2 left-2">
             <Badge className="text-xs font-medium bg-orange-500 text-white">
               Bestseller
@@ -194,28 +193,30 @@ const UdemyStyleCourseCard = ({
         </p>
 
         {/* Rating */}
-        <div className="flex items-center mb-2">
-          <span className={`font-bold text-orange-500 mr-1 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
-            {mockRating.toFixed(1)}
-          </span>
-          <div className="flex mr-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star 
-                key={star} 
-                className={`${variant === 'compact' ? 'w-3 h-3' : 'w-4 h-4'} ${
-                  star <= Math.floor(mockRating) 
-                    ? "text-orange-400 fill-orange-400" 
-                    : star - 0.5 <= mockRating 
-                      ? "text-orange-400 fill-orange-400" 
-                      : "text-gray-300"
-                }`} 
-              />
-            ))}
+        {reviewCount > 0 && (
+          <div className="flex items-center mb-2">
+            <span className={`font-bold text-orange-500 mr-1 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
+              {rating.toFixed(1)}
+            </span>
+            <div className="flex mr-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`${variant === 'compact' ? 'w-3 h-3' : 'w-4 h-4'} ${
+                    star <= Math.floor(rating)
+                      ? "text-orange-400 fill-orange-400"
+                      : star - 0.5 <= rating
+                        ? "text-orange-400 fill-orange-400"
+                        : "text-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className={`text-gray-500 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
+              ({reviewCount.toLocaleString()})
+            </span>
           </div>
-          <span className={`text-gray-500 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
-            ({mockReviewCount.toLocaleString()})
-          </span>
-        </div>
+        )}
 
         {/* Course Stats */}
         <div className="flex items-center gap-4 mb-3">

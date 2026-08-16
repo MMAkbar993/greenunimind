@@ -1,4 +1,65 @@
 import Question from '../models/Question.js';
+import Course from '../models/Course.js';
+import Lecture from '../models/Lecture.js';
+
+/**
+ * All student questions across every course the teacher owns, for the
+ * teacher's Q&A inbox.
+ * GET /api/questions/teacher/:teacherId
+ */
+export const getQuestionsByTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const currentUserId = req.user._id.toString();
+    if (currentUserId !== teacherId || req.user.role !== 'teacher') {
+      return res.status(403).json({ success: false, message: 'Access denied.' });
+    }
+
+    const courses = await Course.find({ creator: teacherId }).select('_id title').lean();
+    const courseIds = courses.map((c) => c._id);
+    const courseMap = Object.fromEntries(courses.map((c) => [c._id.toString(), c]));
+
+    const lectures = await Lecture.find({ courseId: { $in: courseIds } })
+      .select('_id lectureTitle courseId')
+      .lean();
+    const lectureIds = lectures.map((l) => l._id);
+    const lectureMap = Object.fromEntries(lectures.map((l) => [l._id.toString(), l]));
+
+    const questions = await Question.find({ lectureId: { $in: lectureIds } })
+      .populate('studentId', 'name email profileImg')
+      .sort({ answered: 1, createdAt: -1 })
+      .lean();
+
+    const data = questions.map((q) => {
+      const lecture = lectureMap[q.lectureId.toString()];
+      const course = lecture ? courseMap[lecture.courseId.toString()] : undefined;
+      return {
+        _id: q._id,
+        question: q.question,
+        timestamp: q.timestamp,
+        answered: q.answered,
+        answer: q.answer,
+        answeredAt: q.answeredAt,
+        createdAt: q.createdAt,
+        student: q.studentId,
+        lectureId: q.lectureId,
+        lectureTitle: lecture?.lectureTitle || 'Unknown lecture',
+        courseId: lecture?.courseId,
+        courseTitle: course?.title || 'Unknown course',
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        questions: data,
+        unansweredCount: data.filter((q) => !q.answered).length,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Failed to fetch questions.' });
+  }
+};
 
 /**
  * POST /api/questions/:studentId

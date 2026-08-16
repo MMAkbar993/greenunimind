@@ -78,4 +78,27 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
   });
 };
 
+export const sendInvoiceEmail = async (email, { invoiceNumber, courseTitle, amount, currency }) => {
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: (currency || 'usd').toUpperCase(),
+  }).format(amount);
+
+  await sendEmail({
+    to: email,
+    subject: `GreenUniMind - Invoice ${invoiceNumber}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #16a34a;">GreenUniMind AI</h2>
+        <p>Here is your invoice for <strong>${courseTitle}</strong>.</p>
+        <div style="background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <p style="margin: 4px 0;"><strong>Invoice #:</strong> ${invoiceNumber}</p>
+          <p style="margin: 4px 0;"><strong>Amount:</strong> ${formattedAmount}</p>
+        </div>
+        <p>You can download the full invoice PDF from your dashboard at any time.</p>
+      </div>
+    `,
+  });
+};
+
 export default sendEmail;

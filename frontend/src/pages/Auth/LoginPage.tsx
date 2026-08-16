@@ -31,7 +31,8 @@ import { InputPassWord } from "@/components/ui/input-password";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
-import { useEffect } from "react";
+import TwoFactorVerification from "@/components/TwoFactorVerification";
+import { useEffect, useState } from "react";
 
 export type TLoginForm = {
   email: string;
@@ -43,6 +44,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [login] = useLoginMutation();
   const [searchParams] = useSearchParams();
+  const [twoFactorEmail, setTwoFactorEmail] = useState<string | null>(null);
 
   // Get provider and email from URL if they exist
   const provider = searchParams.get("provider");
@@ -112,6 +114,13 @@ const LoginPage = () => {
     } catch (err: any) {
       console.error(err);
 
+      // Handle two-factor authentication requirement
+      if (err?.data?.data?.requiresTwoFactor) {
+        toast.dismiss(toastId);
+        setTwoFactorEmail(err?.data?.data?.email || formData.email);
+        return;
+      }
+
       // Handle unverified user error
       if (err?.data?.message?.includes('Email not verified') || err?.data?.data?.requiresVerification) {
         const email = err?.data?.data?.email || formData.email;
@@ -132,6 +141,17 @@ const LoginPage = () => {
       dispatch(setIsLoading(false));
     }
   };
+
+  if (twoFactorEmail) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4 py-8">
+        <TwoFactorVerification
+          email={twoFactorEmail}
+          onCancel={() => setTwoFactorEmail(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4 py-8">

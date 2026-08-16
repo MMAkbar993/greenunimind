@@ -3,12 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   BarChart3,
   BookOpen,
   Download,
   MessageSquare,
+  MessageSquareText,
   RefreshCw,
   Star,
   TrendingUp,
@@ -23,6 +33,8 @@ import {
   useGetReviewDashboardQuery,
   useGetReviewStatsQuery,
   useGetTeacherReviewsQuery,
+  useRespondToReviewMutation,
+  useExportReviewsMutation,
 } from '@/redux/features/review/reviewApi';
 
 // Components
@@ -64,6 +76,12 @@ const Reviews: React.FC = () => {
     refetch: refetchDashboard,
   } = useGetReviewDashboardQuery({ teacherId: teacherId || '', filters: {} }, { skip: !teacherId });
 
+  const [respondToReview, { isLoading: isResponding }] = useRespondToReviewMutation();
+  const [exportReviews, { isLoading: isExporting }] = useExportReviewsMutation();
+
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState('');
+
   // Memoized data
   const courses = useMemo(() => {
     return coursesData?.data || [];
@@ -88,10 +106,10 @@ const Reviews: React.FC = () => {
 
   // Real reviews data
   const reviews = useMemo(() => {
-    if (!reviewsData?.data) {
+    if (!reviewsData?.reviews) {
       return [];
     }
-    return reviewsData.data;
+    return reviewsData.reviews;
   }, [reviewsData]);
 
   // Handlers
@@ -112,10 +130,40 @@ const Reviews: React.FC = () => {
   };
 
   const handleExport = async () => {
+    if (!teacherId) return;
     try {
-      toast.info('Export functionality coming soon');
+      const result = await exportReviews({ teacherId }).unwrap();
+      if (!(result instanceof Blob)) {
+        throw new Error((result as { message?: string })?.message || 'Failed to export reviews.');
+      }
+      const url = window.URL.createObjectURL(result);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reviews_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Reviews exported');
     } catch (error) {
       toast.error('Failed to export reviews');
+    }
+  };
+
+  const handleOpenRespond = (reviewId: string, existingResponse?: string) => {
+    setRespondingTo(reviewId);
+    setResponseText(existingResponse || '');
+  };
+
+  const handleSubmitResponse = async () => {
+    if (!respondingTo || !responseText.trim()) return;
+    try {
+      await respondToReview({ reviewId: respondingTo, response: responseText.trim() }).unwrap();
+      toast.success('Response sent');
+      setRespondingTo(null);
+      setResponseText('');
+    } catch (error) {
+      toast.error('Failed to send response');
     }
   };
 
@@ -149,9 +197,9 @@ const Reviews: React.FC = () => {
               Refresh
             </Button>
 
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
-              Export
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+              <Download className={cn('w-4 h-4 mr-2', isExporting && 'animate-pulse')} />
+              {isExporting ? 'Exporting...' : 'Export'}
             </Button>
           </div>
         </div>
@@ -321,12 +369,27 @@ const Reviews: React.FC = () => {
                           </div>
                           <p className="text-sm text-gray-600 mb-2">{review.courseName}</p>
                           <p className="text-gray-800">{review.comment}</p>
+
+                          {review.response && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                              <div className="flex items-center gap-2 text-xs font-medium text-gray-700 mb-1.5">
+                                <MessageSquareText className="h-3.5 w-3.5 text-blue-600" />
+                                Your response
+                              </div>
+                              <p className="text-sm text-gray-800">{review.response.text}</p>
+                            </div>
+                          )}
+
                           <div className="flex items-center gap-4 mt-3">
                             <span className="text-sm text-gray-500">
                               {review.helpful} people found this helpful
                             </span>
-                            <Button variant="outline" size="sm">
-                              Respond
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenRespond(review.id, review.response?.text)}
+                            >
+                              {review.response ? 'Edit response' : 'Respond'}
                             </Button>
                           </div>
                         </div>
@@ -357,6 +420,30 @@ const Reviews: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!respondingTo} onOpenChange={(open) => !open && setRespondingTo(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Respond to Review</DialogTitle>
+            <DialogDescription>Your response will be visible to the student.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Type your response..."
+            value={responseText}
+            onChange={(e) => setResponseText(e.target.value)}
+            className="min-h-[100px]"
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRespondingTo(null)} disabled={isResponding}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitResponse} disabled={isResponding || !responseText.trim()}>
+              {isResponding ? 'Sending...' : 'Send Response'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardErrorBoundary>
   );
 };

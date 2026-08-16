@@ -1,21 +1,18 @@
 // Review Types and Interfaces for LMS Dashboard
 
 export interface IReview {
-  _id: string;
-  student: {
-    _id: string;
-    name: string;
-    email: string;
-    profileImg?: string;
-  };
-  course: {
-    _id: string;
-    title: string;
-    thumbnail?: string;
-  };
-  teacher: string;
+  id: string;
+  studentName: string;
+  studentAvatar?: string;
+  courseId: string;
+  courseName: string;
+  courseThumbnail?: string;
   rating: number;
   comment: string;
+  helpful: number;
+  isHelpfulByMe?: boolean;
+  isRespondedTo: boolean;
+  response: { text: string; respondedAt: string } | null;
   createdAt: string;
   updatedAt: string;
 }

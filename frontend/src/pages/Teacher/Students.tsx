@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { useGetMeQuery } from "@/redux/features/auth/authApi";
 import { useGetEnrolledStudentsQuery } from "@/redux/features/teacher/teacherApi";
 import { useGetCreatorCourseQuery } from "@/redux/features/course/courseApi";
@@ -67,6 +68,15 @@ import {
 } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 
 // StudentDetails component for showing detailed student information
@@ -269,13 +279,24 @@ const Students = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [enrollmentRecency, setEnrollmentRecency] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
 
   const courses = coursesData?.data || [];
   const enrolledStudents = enrolledStudentsData?.data || [];
 
-  // Filter students based on search term, selected course, and status
-  const filteredStudents = enrolledStudents.filter(
-    (student: IEnrolledStudent) => {
+  const getMostRecentEnrollment = (student: IEnrolledStudent) =>
+    student.enrolledCourses.reduce((latest: number, course) => {
+      const enrolledAt = course.enrolledAt ? new Date(course.enrolledAt).getTime() : 0;
+      return enrolledAt > latest ? enrolledAt : latest;
+    }, 0);
+
+  const getHighestProgress = (student: IEnrolledStudent) =>
+    student.enrolledCourses.reduce((max, course) => Math.max(max, course.progress), 0);
+
+  // Filter students based on search term, selected course, status, and recency
+  const filteredStudents = enrolledStudents
+    .filter((student: IEnrolledStudent) => {
       const fullName =
         `${student.name.firstName} ${student.name.lastName}`.toLowerCase();
       const matchesSearch =
@@ -297,9 +318,27 @@ const Students = () => {
         (statusFilter === "completed" && hasCompletedCourse) ||
         (statusFilter === "in-progress" && !hasCompletedCourse);
 
-      return matchesSearch && matchesCourse && matchesStatus;
-    }
-  );
+      const matchesRecency =
+        enrollmentRecency === "all" ||
+        (() => {
+          const mostRecent = getMostRecentEnrollment(student);
+          if (!mostRecent) return false;
+          const daysAgo = (Date.now() - mostRecent) / (1000 * 60 * 60 * 24);
+          if (enrollmentRecency === "7d") return daysAgo <= 7;
+          if (enrollmentRecency === "30d") return daysAgo <= 30;
+          if (enrollmentRecency === "90d") return daysAgo <= 90;
+          return true;
+        })();
+
+      return matchesSearch && matchesCourse && matchesStatus && matchesRecency;
+    })
+    .sort((a, b) => {
+      if (sortBy === "progress") return getHighestProgress(b) - getHighestProgress(a);
+      if (sortBy === "recent") return getMostRecentEnrollment(b) - getMostRecentEnrollment(a);
+      const nameA = `${a.name.firstName} ${a.name.lastName}`.toLowerCase();
+      const nameB = `${b.name.firstName} ${b.name.lastName}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // Calculate total students and completion stats
   const totalStudents = enrolledStudents.length;
@@ -468,14 +507,46 @@ const Students = () => {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-1">
-                  <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">Filter</span>
-                </Button>
-                <Button variant="outline" size="sm" className="gap-1">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sort</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("gap-1", enrollmentRecency !== "all" && "border-primary text-primary")}
+                    >
+                      <Filter className="h-4 w-4" />
+                      <span className="hidden sm:inline">Filter</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Enrolled within</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup value={enrollmentRecency} onValueChange={setEnrollmentRecency}>
+                      <DropdownMenuRadioItem value="all">Any time</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="7d">Last 7 days</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="30d">Last 30 days</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="90d">Last 90 days</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span className="hidden sm:inline">Sort</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                      <DropdownMenuRadioItem value="name">Name (A-Z)</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="progress">Progress (high to low)</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="recent">Recently enrolled</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </CardHeader>
@@ -592,11 +663,11 @@ const Students = () => {
                 </div>
                 <h3 className="mt-4 text-lg font-semibold">No students found</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto mt-2">
-                  {searchTerm || selectedCourse !== "all" || statusFilter !== "all"
+                  {searchTerm || selectedCourse !== "all" || statusFilter !== "all" || enrollmentRecency !== "all"
                     ? "Try adjusting your filters to find what you're looking for."
                     : "You don't have any enrolled students yet. Students will appear here once they enroll in your courses."}
                 </p>
-                {(searchTerm || selectedCourse !== "all" || statusFilter !== "all") && (
+                {(searchTerm || selectedCourse !== "all" || statusFilter !== "all" || enrollmentRecency !== "all") && (
                   <Button
                     variant="outline"
                     className="mt-4"
@@ -604,6 +675,7 @@ const Students = () => {
                       setSearchTerm("");
                       setSelectedCourse("all");
                       setStatusFilter("all");
+                      setEnrollmentRecency("all");
                     }}
                   >
                     Reset Filters

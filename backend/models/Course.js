@@ -54,6 +54,8 @@ const courseSchema = new mongoose.Schema(
       default: 'draft',
     },
     isFree: { type: String, default: 'false' },
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    totalReviews: { type: Number, default: 0 },
   },
   {
     timestamps: true,

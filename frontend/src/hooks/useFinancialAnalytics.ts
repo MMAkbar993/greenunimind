@@ -49,7 +49,10 @@ interface FinancialAnalyticsData {
   refetch: () => void;
 }
 
-export const useFinancialAnalytics = (period: string = '30d'): FinancialAnalyticsData => {
+export const useFinancialAnalytics = (
+  period: string = '30d',
+  realtimeUpdatesEnabled: boolean = true
+): FinancialAnalyticsData => {
   const { data: userData } = useGetMeQuery(undefined);
   const teacherId = userData?.data?._id;
 
@@ -61,9 +64,9 @@ export const useFinancialAnalytics = (period: string = '30d'): FinancialAnalytic
     isLoading: isEarningsLoading,
     error: earningsError,
     refetch: refetchEarnings
-  } = useGetTeacherEarningsQuery(teacherId, { 
+  } = useGetTeacherEarningsQuery(teacherId, {
     skip: !teacherId,
-    pollingInterval: 30000, // Poll every 30 seconds for real-time updates
+    pollingInterval: realtimeUpdatesEnabled ? 30000 : 0, // Poll every 30 seconds for real-time updates
   });
 
   // Fetch transactions data
@@ -72,9 +75,9 @@ export const useFinancialAnalytics = (period: string = '30d'): FinancialAnalytic
     isLoading: isTransactionsLoading,
     error: transactionsError,
     refetch: refetchTransactions
-  } = useGetTeacherTransactionsQuery({ teacherId, period }, { 
+  } = useGetTeacherTransactionsQuery({ teacherId, period }, {
     skip: !teacherId,
-    pollingInterval: 60000, // Poll every minute
+    pollingInterval: realtimeUpdatesEnabled ? 60000 : 0, // Poll every minute
   });
 
   // Fetch payouts data
@@ -83,9 +86,9 @@ export const useFinancialAnalytics = (period: string = '30d'): FinancialAnalytic
     isLoading: isPayoutsLoading,
     error: payoutsError,
     refetch: refetchPayouts
-  } = useGetTeacherPayoutsQuery(teacherId, { 
+  } = useGetTeacherPayoutsQuery(teacherId, {
     skip: !teacherId,
-    pollingInterval: 120000, // Poll every 2 minutes
+    pollingInterval: realtimeUpdatesEnabled ? 120000 : 0, // Poll every 2 minutes
   });
 
   // Calculate growth percentages
@@ -283,21 +286,29 @@ export const useRealTimeEarnings = (teacherId: string) => {
 // Hook for exporting financial data
 export const useFinancialDataExport = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const { data: userData } = useGetMeQuery(undefined);
+  const teacherId = userData?.data?._id;
 
   const exportData = async (type: 'earnings' | 'transactions' | 'payouts', format: 'csv' | 'pdf' = 'csv') => {
+    if (!teacherId) {
+      throw new Error('User not loaded yet.');
+    }
+
     setIsExporting(true);
-    
+
     try {
-      // This would call your backend API to generate and download the export
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`${apiBaseUrl}/payments/export/${type}?format=${format}`, {
-        method: 'GET',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiBaseUrl}/payments/export/${teacherId}?type=${type === 'earnings' ? 'transactions' : type}&format=${format}`,
+        {
+          method: 'GET',
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Export failed');
