@@ -585,7 +585,26 @@ const AllCourses = () => {
                         key={course._id}
                         variants={itemVariants}
                         whileHover={{ y: -5 }}
-                        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300"
+                        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        role="link"
+                        tabIndex={0}
+                        onClick={() =>
+                          navigate(
+                            isCourseEnrolled(course._id)
+                              ? `/student/course/${course._id}`
+                              : `/courses/${course._id}`
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(
+                              isCourseEnrolled(course._id)
+                                ? `/student/course/${course._id}`
+                                : `/courses/${course._id}`
+                            );
+                          }
+                        }}
                       >
                         {/* Card Header with Image */}
                         <div className="relative">
@@ -619,16 +638,7 @@ const AllCourses = () => {
                         </div>
 
                         {/* Card Content */}
-                        <div
-                          className="p-5"
-                          onClick={() =>
-                            navigate(
-                              isCourseEnrolled(course._id)
-                                ? `/student/course/${course._id}`
-                                : `/courses/${course._id}`
-                            )
-                          }
-                        >
+                        <div className="p-5">
                           <div className="mb-3">
                             <div className="flex items-center mb-2">
                               <div className="flex">
