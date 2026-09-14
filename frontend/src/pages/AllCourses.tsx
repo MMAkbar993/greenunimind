@@ -614,7 +614,7 @@ const AllCourses = () => {
                               style={{
                                 backgroundImage: `url(${
                                   course.courseThumbnail ||
-                                  "/images/default-course.jpg"
+                                  "/images/default-course.svg"
                                 })`,
                               }}
                             />

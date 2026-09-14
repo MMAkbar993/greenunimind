@@ -238,7 +238,7 @@ const CategoryBrowse = () => {
                     <div
                       className="h-48 bg-cover bg-center"
                       style={{
-                        backgroundImage: `url(${course.courseThumbnail || "/images/default-course.jpg"})`,
+                        backgroundImage: `url(${course.courseThumbnail || "/images/default-course.svg"})`,
                       }}
                     />
                     <div className="p-4">

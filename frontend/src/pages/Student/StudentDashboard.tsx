@@ -873,7 +873,7 @@ const Dashboard = () => {
                 <Link to={`/courses/${course._id}`}>
                   <div className="aspect-video bg-gray-100 relative">
                     <img
-                      src={course.courseThumbnail || "/images/default-course.jpg"}
+                      src={course.courseThumbnail || "/images/default-course.svg"}
                       alt={course.title}
                       className="w-full h-full object-cover"
                     />

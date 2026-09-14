@@ -400,7 +400,7 @@ const CoursePage = () => {
             <div className="relative">
               <div className="relative rounded-xl overflow-hidden shadow-lg group">
                 <img
-                  src={course.courseThumbnail || "/images/default-course.jpg"}
+                  src={course.courseThumbnail || "/images/default-course.svg"}
                   alt={course.title}
                   className="w-full h-56 sm:h-64 md:h-72 object-cover transition-transform duration-500 group-hover:scale-105"
                 />

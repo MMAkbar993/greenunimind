@@ -135,7 +135,7 @@ const UdemyStyleCourseCard = ({
           }`}
           style={{
             backgroundImage: `url(${
-              course.courseThumbnail || "/images/default-course.jpg"
+              course.courseThumbnail || "/images/default-course.svg"
             })`,
           }}
         >

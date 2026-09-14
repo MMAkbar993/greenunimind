@@ -109,7 +109,7 @@ const CourseCard = ({
             className="w-full h-[200px] rounded-xl bg-cover bg-center bg-gray-100"
             style={{
               backgroundImage: `url(${
-                course.courseThumbnail || "/images/default-course.jpg"
+                course.courseThumbnail || "/images/default-course.svg"
               })`,
             }}
           />
