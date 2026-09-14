@@ -38,6 +38,9 @@ export interface Course {
   totalDuration?: number;
   averageRating?: number;
   totalReviews?: number;
+  learningObjectives?: string[];
+  prerequisites?: string;
+  targetAudience?: string;
 }
 
 export interface CreateCourseRequest {

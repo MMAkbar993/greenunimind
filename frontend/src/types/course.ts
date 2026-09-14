@@ -48,6 +48,9 @@ export interface ICourse {
   isFree?: string;
   averageRating?: number;
   totalReviews?: number;
+  learningObjectives?: string[];
+  prerequisites?: string;
+  targetAudience?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -11,40 +11,39 @@ async function seedCategoriesIfEmpty() {
   if (count > 0) return;
 
   const defaultCategories = [
-    { name: 'Development', slug: 'development', description: 'Programming and software development', icon: 'code' },
-    { name: 'Business', slug: 'business', description: 'Business and management', icon: 'briefcase' },
-    { name: 'Design', slug: 'design', description: 'Design and creative', icon: 'palette' },
-    { name: 'Marketing', slug: 'marketing', description: 'Marketing and growth', icon: 'trending-up' },
-    { name: 'Lifestyle', slug: 'lifestyle', description: 'Health, productivity and lifestyle', icon: 'heart' },
+    { name: 'Sustainability', slug: 'sustainability', description: 'Core sustainability principles and practice', icon: 'leaf' },
+    { name: 'Clean Energy', slug: 'clean-energy', description: 'Solar, wind, and renewable energy systems', icon: 'zap' },
+    { name: 'Environmental Science', slug: 'environmental-science', description: 'Ecology, climate, and environmental impact', icon: 'globe' },
+    { name: 'Green Technology', slug: 'green-technology', description: 'Emerging technology for a sustainable future', icon: 'cpu' },
+    { name: 'Business Sustainability', slug: 'business-sustainability', description: 'ESG, circular economy, and sustainable business', icon: 'briefcase' },
   ];
 
   const inserted = await Category.insertMany(defaultCategories);
   const subcategoriesBySlug = {
-    development: [
-      { name: 'Web Development', slug: 'web-development' },
-      { name: 'Mobile Development', slug: 'mobile-development' },
-      { name: 'Data Science', slug: 'data-science' },
-      { name: 'DevOps', slug: 'devops' },
+    sustainability: [
+      { name: 'Sustainable Development Goals', slug: 'sdgs' },
+      { name: 'Circular Economy', slug: 'circular-economy' },
+      { name: 'Sustainable Agriculture', slug: 'sustainable-agriculture' },
     ],
-    business: [
-      { name: 'Entrepreneurship', slug: 'entrepreneurship' },
-      { name: 'Finance', slug: 'finance' },
-      { name: 'Leadership', slug: 'leadership' },
+    'clean-energy': [
+      { name: 'Solar Power', slug: 'solar-power' },
+      { name: 'Wind Energy', slug: 'wind-energy' },
+      { name: 'Energy Storage', slug: 'energy-storage' },
     ],
-    design: [
-      { name: 'UI/UX', slug: 'ui-ux' },
-      { name: 'Graphic Design', slug: 'graphic-design' },
-      { name: 'Video Editing', slug: 'video-editing' },
+    'environmental-science': [
+      { name: 'Climate Science & Policy', slug: 'climate-science-policy' },
+      { name: 'Environmental Impact Assessment', slug: 'environmental-impact-assessment' },
+      { name: 'Conservation', slug: 'conservation' },
     ],
-    marketing: [
-      { name: 'Digital Marketing', slug: 'digital-marketing' },
-      { name: 'SEO', slug: 'seo' },
-      { name: 'Social Media', slug: 'social-media' },
+    'green-technology': [
+      { name: 'Carbon Capture', slug: 'carbon-capture' },
+      { name: 'Smart Grids', slug: 'smart-grids' },
+      { name: 'Green Innovation', slug: 'green-innovation' },
     ],
-    lifestyle: [
-      { name: 'Personal Development', slug: 'personal-development' },
-      { name: 'Health & Fitness', slug: 'health-fitness' },
-      { name: 'Productivity', slug: 'productivity' },
+    'business-sustainability': [
+      { name: 'ESG Reporting', slug: 'esg-reporting' },
+      { name: 'Corporate Sustainability Leadership', slug: 'corporate-sustainability-leadership' },
+      { name: 'Sustainable Supply Chains', slug: 'sustainable-supply-chains' },
     ],
   };
 

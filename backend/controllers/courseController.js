@@ -13,7 +13,34 @@ function parseCourseBody(req) {
   return req.body;
 }
 
-async function attachLectures(courses) {
+// Accepts an array, a JSON-stringified array, or newline/comma-separated text
+// (the teacher-facing form sends one textarea per list) and returns a clean
+// array of non-empty strings.
+function normalizeStringList(value) {
+  if (Array.isArray(value)) {
+    return value.map((v) => String(v).trim()).filter(Boolean);
+  }
+  if (typeof value === 'string') {
+    let items = value;
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) items = parsed;
+    } catch (e) {
+      items = value.split(/\r?\n|,/);
+    }
+    if (typeof items === 'string') items = items.split(/\r?\n|,/);
+    return items.map((v) => String(v).trim()).filter(Boolean);
+  }
+  return [];
+}
+
+// Fields that let someone actually watch/read a lecture. These are stripped out
+// unless the viewer is enrolled, is the course creator, or the lecture is
+// flagged isPreviewFree — otherwise the public course-details endpoints were
+// handing out playable video URLs for paid lectures to anyone who asked.
+const LECTURE_MEDIA_FIELDS = ['videoUrl', 'videoResolutions', 'hlsUrl', 'audioUrl', 'articleContent', 'pdfUrl'];
+
+async function attachLectures(courses, viewerId) {
   const list = Array.isArray(courses) ? courses : [courses];
   const ids = list.map((c) => c._id);
   const lectures = await Lecture.find({ courseId: { $in: ids } }).sort({ order: 1 }).lean();
@@ -23,10 +50,22 @@ async function attachLectures(courses) {
     if (!byCourse[cid]) byCourse[cid] = [];
     byCourse[cid].push(lec);
   }
-  return list.map((c) => ({
-    ...c.toObject ? c.toObject() : c,
-    lectures: byCourse[c._id.toString()] || [],
-  }));
+  return list.map((c) => {
+    const plain = c.toObject ? c.toObject() : c;
+    const isCreator = viewerId && plain.creator && plain.creator.toString() === viewerId.toString();
+    const isEnrolled = viewerId && Array.isArray(plain.enrolledStudents) &&
+      plain.enrolledStudents.some((id) => id.toString() === viewerId.toString());
+    const unlockedForViewer = isCreator || isEnrolled;
+
+    const lecturesForViewer = (byCourse[c._id.toString()] || []).map((lec) => {
+      if (unlockedForViewer || lec.isPreviewFree) return lec;
+      const redacted = { ...lec };
+      for (const field of LECTURE_MEDIA_FIELDS) delete redacted[field];
+      return redacted;
+    });
+
+    return { ...plain, lectures: lecturesForViewer };
+  });
 }
 
 export const createCourse = async (req, res) => {
@@ -47,6 +86,9 @@ export const createCourse = async (req, res) => {
     const isFree = (body.isFree ?? req.body?.isFree ?? 'false').toString();
     const status = body.status ?? req.body?.status ?? 'draft';
     const isPublished = status === 'published';
+    const learningObjectives = normalizeStringList(body.learningObjectives ?? req.body?.learningObjectives);
+    const prerequisites = (body.prerequisites ?? req.body?.prerequisites ?? '').toString();
+    const targetAudience = (body.targetAudience ?? req.body?.targetAudience ?? '').toString();
 
     if (!title || !description || !category) {
       return res.status(400).json({
@@ -78,9 +120,12 @@ export const createCourse = async (req, res) => {
       isPublished,
       status,
       isFree,
+      learningObjectives,
+      prerequisites,
+      targetAudience,
     });
 
-    const withLectures = await attachLectures([course]);
+    const withLectures = await attachLectures([course], teacherId);
     res.status(201).json({
       success: true,
       data: withLectures[0],
@@ -104,7 +149,7 @@ export const getCourseById = async (req, res) => {
     if (!isPublished && !isCreator) {
       return res.status(403).json({ success: false, message: 'Course is not available.' });
     }
-    const withLectures = await attachLectures([course]);
+    const withLectures = await attachLectures([course], req.user?._id);
     res.json({ success: true, data: withLectures[0] });
   } catch (err) {
     res.status(500).json({
@@ -118,7 +163,7 @@ export const getCreatorCourses = async (req, res) => {
   try {
     const { teacherId } = req.params;
     const courses = await Course.find({ creator: teacherId }).sort({ updatedAt: -1 }).lean();
-    const withLectures = await attachLectures(courses);
+    const withLectures = await attachLectures(courses, req.user._id);
     res.json({ success: true, data: withLectures });
   } catch (err) {
     res.status(500).json({
@@ -217,6 +262,9 @@ export const editCourse = async (req, res) => {
       updates.status = body.status;
       updates.isPublished = body.status === 'published';
     }
+    if (body.learningObjectives !== undefined) updates.learningObjectives = normalizeStringList(body.learningObjectives);
+    if (body.prerequisites !== undefined) updates.prerequisites = body.prerequisites.toString();
+    if (body.targetAudience !== undefined) updates.targetAudience = body.targetAudience.toString();
 
     const thumbFile = req.file || (req.files && req.files.file ? req.files.file[0] : null) || null;
     if (thumbFile && thumbFile.buffer) {
@@ -232,7 +280,7 @@ export const editCourse = async (req, res) => {
     Object.assign(course, updates);
     await course.save();
 
-    const withLectures = await attachLectures([course]);
+    const withLectures = await attachLectures([course], req.user._id);
     res.json({ success: true, data: withLectures[0] });
   } catch (err) {
     res.status(500).json({

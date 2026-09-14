@@ -386,6 +386,7 @@ export const baseApi = createApi({
     'category',
     'subcategories',
     'subcategory',
+    'educators',
     'analytics',
     'dashboard',
     'activities',

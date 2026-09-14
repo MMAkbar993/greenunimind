@@ -65,6 +65,7 @@ import Impact from "@/pages/Impact";
 import ImpactReport from "@/pages/ImpactReport";
 import Categories from "@/pages/Categories";
 import CategoryBrowse from "@/pages/CategoryBrowse";
+import Educators from "@/pages/Educators";
 import StepperDemo from "@/components/stepper-demo";
 import ConfigDebug from "@/pages/Debug/ConfigDebug";
 import {
@@ -125,6 +126,10 @@ const router = createBrowserRouter([
       {
         path: "categories/:categorySlug/:subcategorySlug",
         element: <CategoryBrowse />,
+      },
+      {
+        path: "educators",
+        element: <Educators />,
       },
       {
         path: "stepper-demo",

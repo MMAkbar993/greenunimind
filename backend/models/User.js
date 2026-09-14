@@ -42,6 +42,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    bio: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    specialization: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
