@@ -42,7 +42,7 @@ SSH into the server:
 
 ```bash
 ssh root@72.62.75.62
-English1112#
+# (enter the root password when prompted — do not store it in this file)
 cd /var/www/greenunimind
 git pull origin main
 pm2 restart all
