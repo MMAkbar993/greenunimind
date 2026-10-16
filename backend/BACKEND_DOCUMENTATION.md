@@ -36,6 +36,7 @@
   - [OAuth](#oauth)
   - [Miscellaneous](#miscellaneous)
 - [Middleware](#middleware)
+- [Error Handling](#error-handling)
 - [Utilities](#utilities)
 - [Third-Party Integrations](#third-party-integrations)
 - [Security](#security)
@@ -456,6 +457,7 @@ Base URL: `/api`
 
 | Method | Endpoint                                  | Auth              | Description            |
 | ------ | ----------------------------------------- | ----------------- | ---------------------- |
+| GET    | `/teachers/public`                        | No                 | Public educator roster with aggregated stats (homepage "Top Educators", `/educators` page) |
 | GET    | `/teachers/:teacherId/enrolled-students`  | protect + teacher  | List enrolled students |
 
 ### Categories & Subcategories
@@ -696,6 +698,7 @@ Teacher analytics dashboard. All endpoints require authentication and a `teacher
 | `optionalProtect` | `auth.js`   | Verifies JWT if present; doesn't block unauthenticated requests. |
 | `parseSignupForm` | `upload.js` | Multer middleware for signup forms. Handles profile image uploads (max 5MB). |
 | `parseCourseForm` | `upload.js` | Multer middleware for course creation. Handles thumbnail uploads (max 10MB). |
+| `asyncHandler`    | `asyncHandler.js` | Wraps an async controller so a thrown/rejected error goes to `next(err)` instead of needing a try/catch in every function. |
 
 ### Global Middleware (applied in `server.js`)
 
@@ -704,6 +707,46 @@ Teacher analytics dashboard. All endpoints require authentication and a `teacher
 - **express-mongo-sanitize** — Prevents NoSQL injection
 - **hpp** — Protects against HTTP parameter pollution
 - **Rate Limiting** — 200 requests/15 min for general API, 20 requests/15 min for auth endpoints
+- **`notFound` / `errorHandler`** — registered last, after every route; see [Error Handling](#error-handling)
+
+---
+
+## Error Handling
+
+Controllers that are migrated to this pattern (new code, and `courseController`,
+`teacherController`, `userController`, `enrollmentController` as of this
+writing — the rest still use their original per-function try/catch and are
+being migrated incrementally) follow this convention instead of a manual
+`try { ... } catch (err) { res.status(500).json({...}) }` in every function:
+
+```js
+import asyncHandler from '../middleware/asyncHandler.js';
+import AppError from '../utils/AppError.js';
+
+export const getCourseById = asyncHandler(async (req, res) => {
+  const course = await Course.findById(req.params.id).lean();
+  if (!course) {
+    throw new AppError('Course not found.', 404); // becomes { success:false, message } with the right status
+  }
+  res.json({ success: true, data: course });
+});
+```
+
+`asyncHandler` (`middleware/asyncHandler.js`) catches whatever the handler
+throws or rejects with and forwards it to `next(err)`. `errorHandler`
+(`middleware/errorHandler.js`), mounted once in `server.js` after every
+route, is the single place that turns an error into a response:
+
+- `AppError` (`utils/AppError.js`) → uses its `statusCode` as-is
+- Mongoose `CastError` (bad ObjectId in a route param) → `400`
+- Mongoose `ValidationError` → `400` with the field message(s)
+- MongoDB duplicate-key error (`code: 11000`) → `409`
+- anything else → `500`, and logged server-side with the request method/URL
+
+Every response still has the same `{ success: false, message }` shape the
+old manual catches used, so no frontend code needed to change. Unmatched
+routes (previously served Express's default plain-text 404) also go through
+`notFound` → `errorHandler` now, so they return the same JSON shape too.
 
 ---
 
@@ -715,6 +758,7 @@ Teacher analytics dashboard. All endpoints require authentication and a `teacher
 | `email.js`                | `sendVerificationEmail`, `sendPasswordResetEmail` | Email sending via Nodemailer (falls back to console.log) |
 | `certificateGenerator.js` | `generateCertificatePDF`                         | Generates PDF certificates via PDFKit                    |
 | `achievementService.js`   | `awardAchievement`, `checkAndAwardAchievements`  | Awards achievements based on enrollment, completion, etc. |
+| `AppError.js`             | `AppError`                                       | Error class carrying an HTTP status code; see [Error Handling](#error-handling) |
 
 ---
 

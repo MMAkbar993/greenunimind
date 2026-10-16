@@ -46,6 +46,7 @@ import invoiceRoutes from './routes/invoiceRoutes.js';
 import oauthRoutes from './routes/oauthRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import subCategoryRoutes from './routes/subCategoryRoutes.js';
+import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -284,6 +285,13 @@ app.get('/api/health', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'GreenUniMind API is running.' });
 });
+
+// ─── ERROR HANDLING ─────────────────────────────────────────────────────────────
+// Must be registered after every route above. notFound catches anything that
+// didn't match a route; errorHandler is the single place every thrown/passed
+// error (AppError or otherwise) turns into a response.
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
 
