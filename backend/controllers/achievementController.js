@@ -1,59 +1,46 @@
 import Achievement from '../models/Achievement.js';
 import UserAchievement from '../models/UserAchievement.js';
 import Progress from '../models/Progress.js';
+import AppError from '../utils/AppError.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 /**
  * Get all achievements (for display).
  * GET /api/achievements
  */
-export const getAllAchievements = async (req, res) => {
-  try {
-    const achievements = await Achievement.find().sort({ category: 1, points: -1 }).lean();
-    res.json({ success: true, data: achievements });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Failed to fetch achievements.',
-    });
-  }
-};
+export const getAllAchievements = asyncHandler(async (req, res) => {
+  const achievements = await Achievement.find().sort({ category: 1, points: -1 }).lean();
+  res.json({ success: true, data: achievements });
+});
 
 /**
  * Get user's earned achievements.
  * GET /api/achievements/my
  */
-export const getMyAchievements = async (req, res) => {
-  try {
-    const userId = req.user?._id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Login required.',
-      });
-    }
-
-    const userAchievements = await UserAchievement.find({ user: userId })
-      .populate('achievement')
-      .sort({ earnedAt: -1 })
-      .lean();
-
-    res.json({
-      success: true,
-      data: userAchievements.map((ua) => ({
-        ...ua.achievement,
-        earnedAt: ua.earnedAt,
-      })),
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Failed to fetch achievements.',
-    });
+export const getMyAchievements = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new AppError('Login required.', 401);
   }
-};
+
+  const userAchievements = await UserAchievement.find({ user: userId })
+    .populate('achievement')
+    .sort({ earnedAt: -1 })
+    .lean();
+
+  res.json({
+    success: true,
+    data: userAchievements.map((ua) => ({
+      ...ua.achievement,
+      earnedAt: ua.earnedAt,
+    })),
+  });
+});
 
 /**
- * Seed default achievements (run once).
+ * Seed default achievements (run once). Not a route handler — called
+ * directly from server.js at startup, so it's intentionally not wrapped in
+ * asyncHandler (that wrapper is for (req, res) Express handlers only).
  */
 export const seedAchievements = async () => {
   const defaults = [
