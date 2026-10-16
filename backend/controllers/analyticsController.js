@@ -1,6 +1,8 @@
 import Course from '../models/Course.js';
 import Progress from '../models/Progress.js';
 import Transaction from '../models/Transaction.js';
+import AppError from '../utils/AppError.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const protectTeacher = (req, res, next) => {
   const teacherId = req.params.teacherId;
@@ -9,7 +11,7 @@ const protectTeacher = (req, res, next) => {
   // previously `&&`, which let any authenticated teacher pull any other
   // teacher's analytics (isMe OR isAnyTeacher, not isMe AND isTeacher).
   if (currentUserId !== teacherId || req.user?.role !== 'teacher') {
-    return res.status(403).json({ success: false, message: 'Access denied.' });
+    throw new AppError('Access denied.', 403);
   }
   next();
 };
@@ -26,96 +28,92 @@ const performanceLabel = (completionRate) => {
   return 'Needs Improvement';
 };
 
-const stubDashboard = async (req, res) => {
-  try {
-    const teacherId = req.params.teacherId;
-    const courses = await Course.find({ creator: teacherId }).lean();
-    const courseIds = courses.map((c) => c._id);
-    const published = courses.filter((c) => c.isPublished && c.status === 'published');
+const stubDashboard = asyncHandler(async (req, res) => {
+  const teacherId = req.params.teacherId;
+  const courses = await Course.find({ creator: teacherId }).lean();
+  const courseIds = courses.map((c) => c._id);
+  const published = courses.filter((c) => c.isPublished && c.status === 'published');
 
-    const now = new Date();
-    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const [
-      enrollments,
-      progressRecords,
-      earningsAgg,
-      monthlyEarningsAgg,
-      lastMonthEarningsAgg,
-      newStudentsThisMonthUsers,
-      newStudentsLastMonthUsers,
-      coursesThisMonth,
-      coursesLastMonth,
-    ] = await Promise.all([
-      Progress.countDocuments({ course: { $in: courseIds } }),
-      Progress.find({ course: { $in: courseIds } }).select('progress').lean(),
-      Transaction.aggregate([
-        { $match: { teacher: req.user._id, status: 'completed' } },
-        { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
-      ]),
-      Transaction.aggregate([
-        { $match: { teacher: req.user._id, status: 'completed', createdAt: { $gte: startOfThisMonth } } },
-        { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
-      ]),
-      Transaction.aggregate([
-        {
-          $match: {
-            teacher: req.user._id,
-            status: 'completed',
-            createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
-          },
+  const [
+    enrollments,
+    progressRecords,
+    earningsAgg,
+    monthlyEarningsAgg,
+    lastMonthEarningsAgg,
+    newStudentsThisMonthUsers,
+    newStudentsLastMonthUsers,
+    coursesThisMonth,
+    coursesLastMonth,
+  ] = await Promise.all([
+    Progress.countDocuments({ course: { $in: courseIds } }),
+    Progress.find({ course: { $in: courseIds } }).select('progress').lean(),
+    Transaction.aggregate([
+      { $match: { teacher: req.user._id, status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
+    ]),
+    Transaction.aggregate([
+      { $match: { teacher: req.user._id, status: 'completed', createdAt: { $gte: startOfThisMonth } } },
+      { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
+    ]),
+    Transaction.aggregate([
+      {
+        $match: {
+          teacher: req.user._id,
+          status: 'completed',
+          createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
         },
-        { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
-      ]),
-      Progress.distinct('user', { course: { $in: courseIds }, enrolledAt: { $gte: startOfThisMonth } }),
-      Progress.distinct('user', {
-        course: { $in: courseIds },
-        enrolledAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
-      }),
-      Course.countDocuments({ creator: teacherId, createdAt: { $gte: startOfThisMonth } }),
-      Course.countDocuments({ creator: teacherId, createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth } }),
-    ]);
-
-    const totalEarnings = earningsAgg[0]?.total || 0;
-    const monthlyEarnings = monthlyEarningsAgg[0]?.total || 0;
-    const lastMonthEarnings = lastMonthEarningsAgg[0]?.total || 0;
-    const completionRate = progressRecords.length
-      ? Math.round(progressRecords.reduce((sum, p) => sum + (p.progress || 0), 0) / progressRecords.length)
-      : 0;
-
-    const totalReviews = courses.reduce((sum, c) => sum + (c.totalReviews || 0), 0);
-    const avgRating = totalReviews
-      ? Math.round(
-          (courses.reduce((sum, c) => sum + (c.averageRating || 0) * (c.totalReviews || 0), 0) / totalReviews) * 10
-        ) / 10
-      : 0;
-
-    res.json({
-      success: true,
-      data: {
-        totalCourses: courses.length,
-        publishedCourses: published.length,
-        draftCourses: courses.length - published.length,
-        totalStudents: enrollments,
-        totalEarnings,
-        avgRating,
-        totalReviews,
-        monthlyEarnings,
-        completionRate,
-        newStudentsThisMonth: newStudentsThisMonthUsers.length,
-        coursesGrowth: percentGrowth(coursesThisMonth, coursesLastMonth),
-        studentsGrowth: percentGrowth(newStudentsThisMonthUsers.length, newStudentsLastMonthUsers.length),
-        earningsGrowth: percentGrowth(monthlyEarnings, lastMonthEarnings),
-        ratingGrowth: 0,
-        completionRateGrowth: 0,
-        performanceScore: performanceLabel(completionRate),
       },
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message || 'Failed to fetch dashboard.' });
-  }
-};
+      { $group: { _id: null, total: { $sum: '$teacherEarnings' } } },
+    ]),
+    Progress.distinct('user', { course: { $in: courseIds }, enrolledAt: { $gte: startOfThisMonth } }),
+    Progress.distinct('user', {
+      course: { $in: courseIds },
+      enrolledAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
+    }),
+    Course.countDocuments({ creator: teacherId, createdAt: { $gte: startOfThisMonth } }),
+    Course.countDocuments({ creator: teacherId, createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth } }),
+  ]);
+
+  const totalEarnings = earningsAgg[0]?.total || 0;
+  const monthlyEarnings = monthlyEarningsAgg[0]?.total || 0;
+  const lastMonthEarnings = lastMonthEarningsAgg[0]?.total || 0;
+  const completionRate = progressRecords.length
+    ? Math.round(progressRecords.reduce((sum, p) => sum + (p.progress || 0), 0) / progressRecords.length)
+    : 0;
+
+  const totalReviews = courses.reduce((sum, c) => sum + (c.totalReviews || 0), 0);
+  const avgRating = totalReviews
+    ? Math.round(
+        (courses.reduce((sum, c) => sum + (c.averageRating || 0) * (c.totalReviews || 0), 0) / totalReviews) * 10
+      ) / 10
+    : 0;
+
+  res.json({
+    success: true,
+    data: {
+      totalCourses: courses.length,
+      publishedCourses: published.length,
+      draftCourses: courses.length - published.length,
+      totalStudents: enrollments,
+      totalEarnings,
+      avgRating,
+      totalReviews,
+      monthlyEarnings,
+      completionRate,
+      newStudentsThisMonth: newStudentsThisMonthUsers.length,
+      coursesGrowth: percentGrowth(coursesThisMonth, coursesLastMonth),
+      studentsGrowth: percentGrowth(newStudentsThisMonthUsers.length, newStudentsLastMonthUsers.length),
+      earningsGrowth: percentGrowth(monthlyEarnings, lastMonthEarnings),
+      ratingGrowth: 0,
+      completionRateGrowth: 0,
+      performanceScore: performanceLabel(completionRate),
+    },
+  });
+});
 
 const stubActivities = async (req, res) => {
   res.json({
