@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGetPublishedCoursesQuery } from '@/redux/features/course/courseApi';
-import { useGetMeQuery } from '@/redux/features/auth/authApi';
-import { useAppDispatch } from '@/redux/hooks';
-import { addToCart } from '@/redux/features/cart/cartSlice';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import Pagination from '@/components/Pagination';
+import CourseCard from '@/components/CourseCard';
 import { ICourse } from '@/types/course';
 import { useGetAllCategoriesQuery } from '@/redux/features/category/categoryApi';
 import {
@@ -22,7 +19,6 @@ import {
   Clock,
   Award,
   Star,
-  ChevronRight,
   Sparkles,
   Tag,
   GraduationCap
@@ -44,27 +40,8 @@ const AllCourses = () => {
     return String(rawCategory);
   };
 
-  const getEnrolledCourseId = (enrolledCourse: unknown): string => {
-    if (typeof enrolledCourse === 'string') return enrolledCourse;
-    if (!enrolledCourse || typeof enrolledCourse !== 'object') return '';
-
-    const raw = enrolledCourse as {
-      courseId?: string | { _id?: string };
-      _id?: string;
-    };
-
-    if (typeof raw.courseId === 'string') return raw.courseId;
-    if (raw.courseId && typeof raw.courseId === 'object' && typeof raw.courseId._id === 'string') {
-      return raw.courseId._id;
-    }
-    if (typeof raw._id === 'string') return raw._id;
-
-    return '';
-  };
-
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   // Get search term from URL query parameter
   const queryParams = new URLSearchParams(location.search);
@@ -77,7 +54,6 @@ const AllCourses = () => {
 
   const { data: courses, isLoading, isError } = useGetPublishedCoursesQuery(undefined);
   const { data: categoriesData } = useGetAllCategoriesQuery();
-  const { data: userData } = useGetMeQuery(undefined, { refetchOnMountOrArgChange: true });
 
   // Update search term when URL changes
   useEffect(() => {
@@ -126,34 +102,6 @@ const AllCourses = () => {
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
   const currentCourses = filteredCourses?.slice(indexOfFirstCourse, indexOfLastCourse);
-
-  const handleEnroll = (e: React.MouseEvent, course: ICourse) => {
-    e.stopPropagation();
-    if (!userData?.data?._id) {
-      toast.error("Please login to enroll in this course");
-      navigate("/login");
-      return;
-    }
-
-    // Check if student is already enrolled in this course
-    const isAlreadyEnrolled = userData?.data?.enrolledCourses?.some(
-      (enrolledCourse: unknown) => getEnrolledCourseId(enrolledCourse) === course._id
-    );
-
-    if (isAlreadyEnrolled) {
-      navigate(`/student/course/${course._id}`);
-      return;
-    }
-
-    dispatch(addToCart({ course, userId: userData.data._id }));
-    toast.success("Course added to cart");
-  };
-
-  const isCourseEnrolled = (courseId?: string) =>
-    !!courseId &&
-    userData?.data?.enrolledCourses?.some(
-      (enrolledCourse: unknown) => getEnrolledCourseId(enrolledCourse) === courseId
-    );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -268,25 +216,30 @@ const AllCourses = () => {
                   </div>
                 </motion.div>
 
-                {/* Popular Categories */}
-                <div className="mt-8 hidden md:block">
-                  <p className="text-sm text-gray-500 mb-3">Popular Categories:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {['Programming', 'Design', 'Business', 'Marketing'].map((category, index) => (
-                      <motion.button
-                        key={category}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.5 + (index * 0.1) }}
-                        className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center"
-                        onClick={() => setSelectedCategory(category)}
-                      >
-                        <Tag className="w-3.5 h-3.5 mr-1.5 text-green-600" />
-                        {category}
-                      </motion.button>
-                    ))}
+                {/* Popular Categories - pulled from real course data, not hardcoded */}
+                {categories.length > 0 && (
+                  <div className="mt-8 hidden md:block">
+                    <p className="text-sm text-gray-500 mb-3">Popular Categories:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.slice(0, 4).map((rawCategory, index) => {
+                        const category = rawCategory as string;
+                        return (
+                          <motion.button
+                            key={category}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.5 + (index * 0.1) }}
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center"
+                            onClick={() => setSelectedCategory(category)}
+                          >
+                            <Tag className="w-3.5 h-3.5 mr-1.5 text-green-600" />
+                            {categoryLookup[category] || category}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
               </motion.div>
             </div>
 
@@ -581,99 +534,8 @@ const AllCourses = () => {
                     animate="visible"
                   >
                     {currentCourses.map((course: ICourse) => (
-                      <motion.div
-                        key={course._id}
-                        variants={itemVariants}
-                        whileHover={{ y: -5 }}
-                        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                        role="link"
-                        tabIndex={0}
-                        onClick={() =>
-                          navigate(
-                            isCourseEnrolled(course._id)
-                              ? `/student/course/${course._id}`
-                              : `/courses/${course._id}`
-                          )
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            navigate(
-                              isCourseEnrolled(course._id)
-                                ? `/student/course/${course._id}`
-                                : `/courses/${course._id}`
-                            );
-                          }
-                        }}
-                      >
-                        {/* Card Header with Image */}
-                        <div className="relative">
-                          <div className="p-2">
-                            <div
-                              className="w-full h-[200px] rounded-xl bg-cover bg-center"
-                              style={{
-                                backgroundImage: `url(${
-                                  course.courseThumbnail ||
-                                  "/images/default-course.svg"
-                                })`,
-                              }}
-                            />
-                          </div>
-
-                          {/* Level Badge */}
-                          <div className="absolute top-4 left-4">
-                            <div className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-xs font-medium text-gray-800 shadow-sm flex items-center">
-                              <GraduationCap className="w-3.5 h-3.5 mr-1.5 text-green-600" />
-                              {course.courseLevel}
-                            </div>
-                          </div>
-
-                          {/* Lectures Count */}
-                          <div className="absolute bottom-4 right-4">
-                            <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-xs font-medium text-white shadow-sm flex items-center">
-                              <BookOpen className="w-3.5 h-3.5 mr-1.5" />
-                              {course.lectures?.length || 0} lectures
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-5">
-                          <div className="mb-3">
-                            <div className="flex items-center mb-2">
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star key={star} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                ))}
-                              </div>
-                              <span className="text-xs text-gray-500 ml-2">(24 reviews)</span>
-                            </div>
-                            <h3 className="font-bold text-gray-900 text-xl mb-2 line-clamp-1 hover:text-green-600 transition-colors cursor-pointer">
-                              {course.title}
-                            </h3>
-                            <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
-                              {getPlainTextFromRichText(course.description) || "No description available"}
-                            </p>
-                          </div>
-
-                          {/* Card Footer */}
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                                <Users className="w-4 h-4 text-green-600" />
-                              </div>
-                              <span className="text-xs text-gray-500 ml-2">{course.enrolledStudents?.length || 0} students</span>
-                            </div>
-
-                            <Button
-                              className="bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm px-4 py-2 flex items-center gap-1"
-                              onClick={(e) => handleEnroll(e, course)}
-                            >
-                              {isCourseEnrolled(course._id) ? "Enrolled" : "Enroll Now"}
-                              {!isCourseEnrolled(course._id) && <ChevronRight className="w-4 h-4" />}
-                            </Button>
-                          </div>
-                        </div>
+                      <motion.div key={course._id} variants={itemVariants} className="h-full">
+                        <CourseCard course={course} />
                       </motion.div>
                     ))}
                   </motion.div>
