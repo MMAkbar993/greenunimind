@@ -36,6 +36,12 @@ export const errorHandler = (err, req, res, next) => {
     message = `${field} already in use.`;
   }
 
+  // jsonwebtoken: bad signature / malformed / expired token
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    statusCode = 401;
+    message = 'Invalid or expired refresh token.';
+  }
+
   if (statusCode >= 500) {
     console.error(`[${req.method} ${req.originalUrl}]`, err);
   }
