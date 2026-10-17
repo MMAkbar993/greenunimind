@@ -91,6 +91,13 @@ export interface EngagementMetrics {
     activity: number;
   }>;
   retentionRate: number;
+  // Not yet computed by the backend (analyticsController's stub endpoints
+  // don't return these) - optional so components can fall back gracefully,
+  // which StudentEngagement.tsx already does via `metrics?.field ?? ...`.
+  trendData?: Array<{ engagement?: number; activeStudents?: number }>;
+  distribution?: { high?: number; medium?: number; low?: number; veryLow?: number };
+  totalStudents?: number;
+  growthRate?: number;
 }
 
 export interface RevenueAnalytics {
@@ -115,6 +122,12 @@ export interface RevenueAnalytics {
   };
   conversionRate: number;
   refundRate: number;
+  // Not yet computed by the backend - optional, same reasoning as above.
+  growthRate?: number;
+  monthlyGrowth?: number;
+  monthlyGrowthChange?: number;
+  averageOrderValueChange?: number;
+  conversionRateChange?: number;
 }
 
 export interface PerformanceMetrics {
@@ -141,6 +154,14 @@ export interface PerformanceMetrics {
     categoryRanking: number;
     peerComparison: number;
   };
+  // Not yet computed by the backend - optional, same reasoning as above.
+  coursePerformance?: Array<{
+    courseName?: string;
+    courseId?: string;
+    totalStudents?: number;
+    completionRate?: number;
+    averageRating?: number;
+  }>;
 }
 
 export interface DashboardSummary {
