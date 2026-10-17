@@ -128,6 +128,7 @@ export interface RevenueAnalytics {
   monthlyGrowthChange?: number;
   averageOrderValueChange?: number;
   conversionRateChange?: number;
+  coursesGrowth?: number;
 }
 
 export interface PerformanceMetrics {
@@ -162,6 +163,8 @@ export interface PerformanceMetrics {
     completionRate?: number;
     averageRating?: number;
   }>;
+  ratingGrowth?: number;
+  completionRateGrowth?: number;
 }
 
 export interface DashboardSummary {

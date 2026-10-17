@@ -6,7 +6,7 @@ import { useCreateLectureMutation } from "@/redux/features/lecture/lectureApi";
 import { useGetCourseByIdQuery } from "@/redux/features/course/courseApi";
 import { useMedia } from "@/hooks/useMediaUpload";
 import { useAppDispatch } from "@/redux/hooks";
-import { setLectures } from "@/redux/features/lecture/lectureSlice";
+import { addLecture } from "@/redux/features/lecture/lectureSlice";
 import LectureForm from "@/components/Lecture/LectureForm";
 
 
@@ -114,7 +114,7 @@ const LectureCreate = () => {
       toast.success("Lecture created successfully!", {
         id: toastId,
       });
-      dispatch(setLectures(response.data));
+      dispatch(addLecture(response.data));
       navigate(`/teacher/courses/${courseId}`);
     } catch (error: unknown) {
       let errorMessage = "Failed to create lecture";
