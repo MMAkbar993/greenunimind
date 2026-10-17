@@ -35,7 +35,10 @@ interface Course {
 
 interface RecentActivity {
   id: string;
-  type: 'enrollment' | 'review' | 'completion' | 'message';
+  // The real activity feed (types/analytics.ts ActivityType) has more
+  // variants than the 4 this card has a specific icon for -
+  // getActivityIcon already falls back to a default icon for anything else.
+  type: string;
   title: string;
   description: string;
   timestamp: string;

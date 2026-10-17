@@ -243,12 +243,12 @@ export const timestampCacheBust = (dispatch: AppDispatch, courseId: string, crea
   
   // Add timestamp to force cache invalidation
   const bustingTags = [
-    { type: 'course', id: `${courseId}_${timestamp}` },
-    { type: 'courses', id: `LIST_${timestamp}` },
+    { type: 'course' as const, id: `${courseId}_${timestamp}` },
+    { type: 'courses' as const, id: `LIST_${timestamp}` },
   ];
 
   if (creatorId) {
-    bustingTags.push({ type: 'courses', id: `creator-${creatorId}_${timestamp}` });
+    bustingTags.push({ type: 'courses' as const, id: `creator-${creatorId}_${timestamp}` });
   }
 
   dispatch(baseApi.util.invalidateTags(bustingTags));

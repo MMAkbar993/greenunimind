@@ -346,6 +346,7 @@ const VideoTutorials: React.FC<VideoTutorialsProps> = ({
       <VideoPlayerView
         video={selectedVideo}
         onBack={() => setSelectedVideo(null)}
+        onSelectVideo={setSelectedVideo}
       />
     );
   }
@@ -724,9 +725,10 @@ const VideoListItem: React.FC<VideoListItemProps> = ({
 interface VideoPlayerViewProps {
   video: VideoTutorial;
   onBack: () => void;
+  onSelectVideo: (video: VideoTutorial) => void;
 }
 
-const VideoPlayerView: React.FC<VideoPlayerViewProps> = ({ video, onBack }) => {
+const VideoPlayerView: React.FC<VideoPlayerViewProps> = ({ video, onBack, onSelectVideo }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(100);
@@ -949,7 +951,7 @@ const VideoPlayerView: React.FC<VideoPlayerViewProps> = ({ video, onBack }) => {
                       key={relatedVideo.id}
                       className="flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer"
                       onClick={() => {
-                        setSelectedVideo(relatedVideo);
+                        onSelectVideo(relatedVideo);
                         setCurrentTime(0);
                         setIsPlaying(false);
                       }}

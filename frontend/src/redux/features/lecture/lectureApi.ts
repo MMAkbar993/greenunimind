@@ -75,8 +75,8 @@ export const lectureApi = baseApi.injectEndpoints({
           pdfUrl: args.data.pdfUrl,
           isPreviewFree: args.data.isPreviewFree || false,
           courseId: args.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         dispatch(addOptimisticUpdate({ lectureId: optimisticId, updates: optimisticLecture }));

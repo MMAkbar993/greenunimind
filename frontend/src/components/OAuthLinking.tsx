@@ -41,7 +41,7 @@ const OAuthLinking = () => {
       // Use RTK Query to get user data instead of direct fetch
       // This ensures we use the correct API base URL configuration
       const userData = await dispatch(
-        authApi.endpoints.getMe.initiate(undefined, { forceRefresh: true })
+        authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
       ).unwrap();
 
       const data = userData;

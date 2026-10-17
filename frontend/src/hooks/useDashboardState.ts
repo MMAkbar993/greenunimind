@@ -40,7 +40,7 @@ export const useDashboardState = () => {
     refetch: refetchAnalytics
   } = useDashboardAnalytics();
 
-  const courses = coursesData?.data?.data || [];
+  const courses = coursesData?.data || [];
 
   // Ensure minimum loading time to prevent flashing
   useEffect(() => {

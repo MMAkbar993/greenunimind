@@ -173,7 +173,7 @@ const StripeConnectStatus: React.FC = () => {
     const currentStatus = quickStatusData?.data || statusData?.data;
     if (currentStatus?.onboardingComplete && !currentStatus?.isVerified && statusCheckCount < 5) {
       // Trigger proactive verification check
-      proactiveVerificationCheck()
+      proactiveVerificationCheck(undefined)
         .unwrap()
         .then((result) => {
           if (result?.data?.status === 'connected') {

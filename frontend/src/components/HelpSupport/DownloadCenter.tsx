@@ -268,7 +268,7 @@ const DownloadCenter: React.FC<DownloadCenterProps> = ({
       {/* Categories */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {['User Guides', 'Templates', 'Best Practices', 'Technical'].map((category) => {
-          const categoryFiles = mockFiles.filter(file => file.category === category);
+          const categoryFiles = mockFiles.filter(file => file.category?.name === category);
           return (
             <Card key={category} className="hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="p-4">
@@ -303,8 +303,8 @@ const DownloadCenter: React.FC<DownloadCenterProps> = ({
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className={getCategoryColor(file.category)} variant="secondary">
-                          {file.category}
+                        <Badge className={getCategoryColor(file.category?.name || '')} variant="secondary">
+                          {file.category?.name}
                         </Badge>
                         {file.isFeatured && (
                           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
@@ -365,8 +365,8 @@ const DownloadCenter: React.FC<DownloadCenterProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900">{file.title}</h3>
-                      <Badge className={getCategoryColor(file.category)} variant="outline">
-                        {file.category}
+                      <Badge className={getCategoryColor(file.category?.name || '')} variant="outline">
+                        {file.category?.name}
                       </Badge>
                       {file.isFeatured && (
                         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
