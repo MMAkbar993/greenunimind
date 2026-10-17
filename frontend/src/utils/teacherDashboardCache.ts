@@ -28,7 +28,14 @@ export const invalidateTeacherDashboardCache = (options: TeacherDashboardCacheOp
     forceRefresh = false 
   } = options;
 
-  const tagsToInvalidate: string[] = [];
+  // Narrowed to the literal tag names actually pushed below - baseApi's
+  // invalidateTags rejects a generic string[], it needs the declared
+  // TagTypes literals (all of these are declared in baseApi.ts's tagTypes).
+  type DashboardCacheTag =
+    | 'analytics' | 'revenue' | 'performance'
+    | 'dashboard' | 'activities'
+    | 'Payouts' | 'PayoutPreferences';
+  const tagsToInvalidate: DashboardCacheTag[] = [];
 
   // Financial data tags
   if (invalidateFinancials) {

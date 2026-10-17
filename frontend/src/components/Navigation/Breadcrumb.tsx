@@ -24,9 +24,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const allItems = showHome 
-    ? [{ label: 'Dashboard', href: '/teacher/dashboard', icon: <Home className="h-4 w-4" /> }, ...items]
-    : items;
+  const homeItem: BreadcrumbItem = { label: 'Dashboard', href: '/teacher/dashboard', icon: <Home className="h-4 w-4" /> };
+  const allItems: BreadcrumbItem[] = showHome ? [homeItem, ...items] : items;
 
   return (
     <nav 

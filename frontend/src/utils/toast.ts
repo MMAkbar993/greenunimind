@@ -14,7 +14,11 @@ interface ToastOptions {
     onClick: () => void;
   };
   description?: string;
-  id?: string;
+  // sonner's toast(...) calls return string | number (the id it assigned),
+  // and callers commonly pass that straight back in to target the same
+  // toast (e.g. a loading toast's id, reused for the success/error that
+  // replaces it) - id must accept both.
+  id?: string | number;
 }
 
 /**

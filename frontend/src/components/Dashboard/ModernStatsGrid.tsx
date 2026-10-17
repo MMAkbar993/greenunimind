@@ -142,6 +142,7 @@ export const ModernStatsGrid: React.FC<ModernStatsGridProps> = ({
       {statCards.map((card) => (
         <DashboardStatCard
           key={card.id}
+          id={card.id}
           title={card.title}
           value={card.value}
           icon={card.icon}
@@ -224,6 +225,7 @@ export const QuickStatsGrid: React.FC<QuickStatsProps> = ({
       {quickStats.map((stat) => (
         <DashboardStatCard
           key={stat.id}
+          id={stat.id}
           title={stat.title}
           value={stat.value}
           icon={stat.icon}
@@ -304,6 +306,7 @@ export const PerformanceMetricsGrid: React.FC<PerformanceMetricsProps> = ({
           trend={stat.trend}
           isLoading={isLoading}
           className="min-h-[130px]"
+          id={stat.id}
         />
       ))}
     </div>

@@ -13,8 +13,8 @@ import { store } from '@/redux/store';
 export const invalidateCourseCaches = (courseId?: string, teacherId?: string) => {
   const tagsToInvalidate = [
     // General course tags
-    'courses',
-    'course',
+    'courses' as const,
+    'course' as const,
 
     // Course-specific tags
     ...(courseId ? [
@@ -34,10 +34,10 @@ export const invalidateCourseCaches = (courseId?: string, teacherId?: string) =>
     ] : []),
 
     // Lecture-related tags
-    'lectures',
-    'lecture',
-    'lecture-list',
-    'lecture-details',
+    'lectures' as const,
+    'lecture' as const,
+    'lecture-list' as const,
+    'lecture-details' as const,
   ];
 
   store.dispatch(baseApi.util.invalidateTags(tagsToInvalidate));
@@ -58,8 +58,8 @@ export const cascadeInvalidateLectureUpdate = (lectureId: string, courseId: stri
     { type: 'lectures' as const, id: courseId },
     { type: 'lecture-list' as const, id: courseId },
     { type: 'lecture' as const, id: 'LIST' },
-    'lectures',
-    'lecture',
+    'lectures' as const,
+    'lecture' as const,
   ];
 
   // Step 2: Invalidate course-specific caches (parent data)
@@ -68,8 +68,8 @@ export const cascadeInvalidateLectureUpdate = (lectureId: string, courseId: stri
     { type: 'course-details' as const, id: courseId },
     { type: 'course-lectures' as const, id: courseId },
     { type: 'courses' as const, id: 'LIST' },
-    'courses',
-    'course',
+    'courses' as const,
+    'course' as const,
   ];
 
   // Step 3: CRITICAL - Invalidate creator courses endpoint
@@ -102,9 +102,9 @@ export const cascadeInvalidateLectureUpdate = (lectureId: string, courseId: stri
 export const invalidateLectureCaches = (lectureId?: string, courseId?: string, teacherId?: string) => {
   const tagsToInvalidate = [
     // General lecture tags
-    'lectures',
-    'lecture',
-    
+    'lectures' as const,
+    'lecture' as const,
+
     // Lecture-specific tags
     ...(lectureId ? [
       { type: 'lecture' as const, id: lectureId },
@@ -129,8 +129,8 @@ export const invalidateLectureCaches = (lectureId?: string, courseId?: string, t
     ] : []),
     
     // General course tags (since lecture changes affect course lists)
-    'courses',
-    'course',
+    'courses' as const,
+    'course' as const,
   ];
 
   store.dispatch(baseApi.util.invalidateTags(tagsToInvalidate));

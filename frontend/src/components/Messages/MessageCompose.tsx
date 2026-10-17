@@ -96,7 +96,11 @@ const MessageCompose: React.FC = () => {
       setContent(composeDraft.content || '');
       setMessageType(composeDraft.messageType || MessageType.DIRECT);
       setPriority(composeDraft.priority || MessagePriority.NORMAL);
-      setIsDraft(composeDraft.isDraft || false);
+      // composeDraft is only ever set when editing an existing saved draft -
+      // there's no `isDraft` field on MessageDraft itself (everything in
+      // that collection is implicitly a draft), so this was always reading
+      // undefined and never showing the "draft saved" indicator below.
+      setIsDraft(true);
     }
   }, [composeDraft]);
 

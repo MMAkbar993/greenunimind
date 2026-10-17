@@ -25,5 +25,10 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Test files target a Jest/Testing-Library/vitest setup that isn't
+  // actually installed (no test script, no jest/vitest/@testing-library
+  // in package.json) - excluded so the app's own type-check isn't blocked
+  // by that separate, unresolved tooling gap. See jest.config.js.
+  "exclude": ["src/**/__tests__/**", "src/**/*.test.*", "src/**/*.spec.*", "src/tests/**"]
 }

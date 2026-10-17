@@ -27,7 +27,7 @@ export function SocialLoginButton({
 }: SocialLoginButtonProps) {
   const handleLogin = () => {
     // Use the OAuth redirect URL from config
-    const url = `${config.oauth[provider].redirectUrl}?role=${role}`;
+    const url = `${config.oauth[provider].redirectUri}?role=${role}`;
     console.log("Redirecting to OAuth URL:", url);
     window.location.href = url;
   };

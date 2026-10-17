@@ -4,12 +4,16 @@ export interface ILecture {
   _id?: string;
   lectureTitle: string;
   instruction?: string;
-  videoUrl: string;
+  // Not every lecture has a video - articleContent/pdfUrl-only lectures are
+  // valid per the backend model, so this can't be required.
+  videoUrl?: string;
   pdfUrl?: string;
-  isPreviewFree: boolean;
+  isPreviewFree?: boolean;
   courseId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  // API responses are JSON, which has no Date type - these always arrive as
+  // ISO strings, never actual Date instances.
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // For the Redux slice state

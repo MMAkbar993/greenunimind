@@ -41,7 +41,14 @@ export interface ICourse {
   enrolledStudents?: string[];
   totalEnrollment?: number;
   lectures?: ILecture[];
-  creator: string | { _id: string; name: string; profileImg?: string };
+  creator: string | {
+    _id: string;
+    // The real backend User.name is always an object
+    // ({firstName, middleName?, lastName}), never a plain string - kept as
+    // a union since some callers defensively handle both shapes.
+    name: string | { firstName: string; middleName?: string; lastName: string };
+    profileImg?: string;
+  };
   isPublished: boolean;
   status: string;
   courseThumbnailPublicId?: string;

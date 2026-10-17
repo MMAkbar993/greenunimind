@@ -868,7 +868,7 @@ const Dashboard = () => {
             Based on your learning history and interests
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recommendations.slice(0, 6).map((course: ICourse) => (
+            {recommendations.slice(0, 6).map((course) => (
               <Card key={course._id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <Link to={`/courses/${course._id}`}>
                   <div className="aspect-video bg-gray-100 relative">

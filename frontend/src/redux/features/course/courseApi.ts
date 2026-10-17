@@ -32,6 +32,7 @@ export interface Course {
   lectures: string[] | Lecture[]; // Support both lecture IDs and populated lecture objects
   creator: string;
   isPublished: boolean;
+  status?: "draft" | "published" | "archived";
   createdAt: string;
   updatedAt: string;
   totalLectures?: number;
@@ -548,10 +549,13 @@ export const courseApi = baseApi.injectEndpoints({
       { data: { recommendations: Course[]; basedOn?: { categories: string[]; level: string } } },
       { limit?: number } | void
     >({
-      query: (params) => ({
-        url: `/recommendations${params?.limit ? `?limit=${params.limit}` : ''}`,
-        method: "GET",
-      }),
+      query: (params) => {
+        const limit = (params || {}).limit;
+        return {
+          url: `/recommendations${limit ? `?limit=${limit}` : ''}`,
+          method: "GET",
+        };
+      },
       providesTags: [{ type: "courses", id: "recommendations" }],
       transformResponse: (response: TResponseRedux<any>) => ({
         data: response.data || { recommendations: [], basedOn: {} },
