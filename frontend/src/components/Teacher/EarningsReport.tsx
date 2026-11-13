@@ -113,18 +113,20 @@ const EarningsReport = () => {
     switch (comparisonPeriod) {
       case "previousPeriod":
         switch (period) {
-          case "month":
+          case "month": {
             const prevMonth = new Date(now);
             prevMonth.setMonth(now.getMonth() - 1);
             return {
               label: format(prevMonth, "MMMM yyyy"),
             };
-          case "quarter":
+          }
+          case "quarter": {
             const prevQuarter = new Date(now);
             prevQuarter.setMonth(Math.floor(now.getMonth() / 3) * 3 - 3);
             return {
               label: `Q${Math.floor(prevQuarter.getMonth() / 3) + 1} ${prevQuarter.getFullYear()}`,
             };
+          }
           case "year":
             return {
               label: `${currentYear - 1}`,
@@ -138,18 +140,20 @@ const EarningsReport = () => {
         }
       case "previousYear":
         switch (period) {
-          case "month":
+          case "month": {
             const sameMonthLastYear = new Date(now);
             sameMonthLastYear.setFullYear(now.getFullYear() - 1);
             return {
               label: format(sameMonthLastYear, "MMMM yyyy"),
             };
-          case "quarter":
+          }
+          case "quarter": {
             const sameQuarterLastYear = new Date(now);
             sameQuarterLastYear.setFullYear(now.getFullYear() - 1);
             return {
               label: `Q${Math.floor(now.getMonth() / 3) + 1} ${currentYear - 1}`,
             };
+          }
           case "year":
             return {
               label: `${currentYear - 1}`,

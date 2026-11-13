@@ -108,7 +108,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
     return () => {
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [duration, hasShownNearCompleteToast, hasTriggeredCompletion, onComplete, onTimeUpdate, toast]);
+  }, [duration, hasShownNearCompleteToast, hasTriggeredCompletion, onComplete, onTimeUpdate]);
 
   // Handle video ended
   useEffect(() => {
@@ -134,7 +134,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
     return () => {
       videoElement.removeEventListener('ended', handleEnded);
     };
-  }, [hasTriggeredCompletion, onComplete, toast]);
+  }, [hasTriggeredCompletion, onComplete]);
 
   // Handle duration change
   useEffect(() => {

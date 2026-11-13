@@ -133,7 +133,7 @@ const UnifiedContentViewer: React.FC<ContentViewerProps> = ({
         description: "Failed to download the content. Please try again.",
       });
     }
-  }, [onDownload, toast, lecture._id]);
+  }, [onDownload, lecture._id]);
 
   // Default active tab to first available content type
   const defaultActive = contentItems[0]?.type ?? 'video';
@@ -273,7 +273,7 @@ const UnifiedContentViewer: React.FC<ContentViewerProps> = ({
           </div>
         );
     }
-  }, [lecture, showPreview, toast, handleDownload]);
+  }, [lecture, showPreview, handleDownload]);
 
   // Get icon for content type
   const getContentIcon = useCallback((type: ContentItem['type']) => {

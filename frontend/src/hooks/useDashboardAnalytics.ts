@@ -152,7 +152,7 @@ export const useDashboardAnalytics = () => {
       completionRateGrowth: performance?.completionRateGrowth ?? 0, // Dynamic from completion rate trends
       performanceScore: getPerformanceScore(),
     };
-  }, [dashboardSummary, enrollmentData, revenueData, performanceData, engagementData]);
+  }, [dashboardSummary, enrollmentData, revenueData, performanceData]);
 
   // Recent activities from dashboard summary
   const recentActivities = dashboardSummary?.data?.recentActivities || [];

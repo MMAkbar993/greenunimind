@@ -186,16 +186,17 @@ const progressReducer = (state: ProgressState, action: ProgressAction): Progress
         error: null,
       };
 
-    case 'BULK_UPDATE_PROGRESS':
+    case 'BULK_UPDATE_PROGRESS': {
       const updatedCourses = { ...state.courses };
       action.payload.forEach(course => {
         updatedCourses[course.courseId] = course;
       });
-      
+
       return {
         ...state,
         courses: updatedCourses,
       };
+    }
 
     default:
       return state;

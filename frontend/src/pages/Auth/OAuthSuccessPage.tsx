@@ -215,7 +215,7 @@ const OAuthSuccessPage = () => {
         }, 100);
       }
     }
-  }, [token, isSuccess, data, enrolledCoursesData, isCoursesLoading, dispatch, navigate]);
+  }, [token, isSuccess, data, enrolledCoursesData, isCoursesLoading, refreshToken, dispatch, navigate]);
 
   // Handle API errors
   useEffect(() => {

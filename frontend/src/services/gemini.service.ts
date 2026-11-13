@@ -70,7 +70,7 @@ class GeminiService {
         /^\d+\./.test(trimmed)
       ) {
         // Clean up the objective text
-        let objective = trimmed
+        const objective = trimmed
           .replace(/^["']|["']$/g, '') // Remove quotes
           .replace(/^[•\-*]\s*/, '') // Remove bullets
           .replace(/^\d+\.\s*/, '') // Remove numbers

@@ -117,7 +117,6 @@ const LectureNotes = ({ lectureId }: LectureNotesProps) => {
     lectureId,
     activeTab,
     createOrUpdateNote,
-    toast,
   ]);
 
   const handleSave = async () => {

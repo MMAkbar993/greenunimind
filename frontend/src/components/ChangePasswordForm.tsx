@@ -23,7 +23,7 @@ const passwordSchema = z
   .string()
   .min(8, { message: "Password must be at least 8 characters long." })
   .max(20, { message: "Password must not exceed 20 characters." })
-  .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_\-])[A-Za-z\d@$!%*#?&^_\-]+$/, {
+  .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^_-])[A-Za-z\d@$!%*#?&^_-]+$/, {
     message:
       "Password must include at least one letter, one number, and one special character.",
   });
