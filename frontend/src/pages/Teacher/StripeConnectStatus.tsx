@@ -71,7 +71,7 @@ const StripeConnectStatus: React.FC = () => {
       case 'processing_capabilities': return 60;
       case 'under_review': return 80;
       case 'completed': return 100;
-      default:
+      default: {
         // Fallback to legacy calculation
         let progress = 0;
         if (status.isConnected) progress += 25;
@@ -79,6 +79,7 @@ const StripeConnectStatus: React.FC = () => {
         if (status.isVerified) progress += 25;
         if (status.canReceivePayments) progress += 25;
         return progress;
+      }
     }
   }, []);
 

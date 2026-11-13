@@ -367,7 +367,7 @@ const CloudinaryVideoPlayer: React.FC<VideoPlayerProps> = ({
         description: videoError.message,
       });
     }
-  }, [isOnline, onError, autoRetry, maxRetries, handleRetry, toast, videoSource, hlsUrl, hlsBlocked, src, videoResolutions]);
+  }, [isOnline, onError, autoRetry, maxRetries, handleRetry, videoSource, hlsUrl, hlsBlocked, src, videoResolutions]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handlePlay = useCallback(() => {

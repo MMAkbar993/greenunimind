@@ -20,7 +20,7 @@ export const optimizeCloudinaryUrl = (
   }
 
   // Clean the URL first - remove any duplicate extensions and trailing spaces
-  let cleanedUrl = url.trim()
+  const cleanedUrl = url.trim()
     .replace(/\.mp4\.mp4/g, '.mp4')
     .replace(/\.m3u8\.m3u8/g, '.m3u8')
     .replace(/\.mp4\.m3u8/g, '.m3u8');

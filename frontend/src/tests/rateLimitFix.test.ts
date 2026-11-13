@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { requestThrottleManager, THROTTLE_CONFIGS } from '@/utils/requestThrottling';
+import { requestThrottleManager, THROTTLE_CONFIGS, generateSmartCacheKey } from '@/utils/requestThrottling';
 import { rateLimitErrorHandler } from '@/utils/rateLimitErrorHandler';
 
 // Mock fetch for testing
@@ -158,8 +158,6 @@ describe('Rate Limiting Fixes', () => {
 
   describe('Smart Cache Keys', () => {
     it('should generate consistent cache keys within time window', () => {
-      const { generateSmartCacheKey } = require('@/utils/requestThrottling');
-      
       const key1 = generateSmartCacheKey('test', { param: 'value' }, 300000);
       const key2 = generateSmartCacheKey('test', { param: 'value' }, 300000);
       
@@ -167,8 +165,6 @@ describe('Rate Limiting Fixes', () => {
     });
 
     it('should generate different cache keys for different parameters', () => {
-      const { generateSmartCacheKey } = require('@/utils/requestThrottling');
-      
       const key1 = generateSmartCacheKey('test', { param: 'value1' }, 300000);
       const key2 = generateSmartCacheKey('test', { param: 'value2' }, 300000);
       

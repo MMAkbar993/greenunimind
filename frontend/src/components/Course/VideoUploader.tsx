@@ -164,7 +164,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
         description: error || 'There was a problem uploading your video.',
       });
     }
-  }, [videoFile, videoUrl, uploadTab, uploadMedia, onUploadComplete, toast, error, useAdaptiveStreaming]);
+  }, [videoFile, videoUrl, uploadTab, uploadMedia, onUploadComplete, error, useAdaptiveStreaming]);
 
   // Handle file removal
   const handleRemove = () => {

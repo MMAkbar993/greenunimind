@@ -171,7 +171,7 @@ const CoursePage = () => {
         navigate("/courses");
       }
     }
-  }, [progressData, lecturesData, enrolledCoursesData, courseId, navigate, toast]);
+  }, [progressData, lecturesData, enrolledCoursesData, courseId, navigate]);
 
   // Loading state
   if (isUserLoading || isCourseLoading || isLecturesLoading || isProgressLoading || isEnrolledLoading) {

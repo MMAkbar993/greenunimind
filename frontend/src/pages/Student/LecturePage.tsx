@@ -392,7 +392,6 @@ const LecturePage = () => {
     lecturesData,
     progressData,
     enrolledCoursesData,
-    toast,
     navigate,
   ]);
 

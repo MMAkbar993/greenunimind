@@ -173,7 +173,8 @@ const EnhancedLectureCard: React.FC<EnhancedLectureCardProps> = ({
             variant="secondary"
             onClick={(e) => {
               e.stopPropagation();
-              variant === 'student' ? onPlay?.() : onPreview?.();
+              if (variant === 'student') onPlay?.();
+              else onPreview?.();
             }}
             disabled={isLocked}
             className="bg-white/90 hover:bg-white text-gray-900"
@@ -292,7 +293,8 @@ const EnhancedLectureCard: React.FC<EnhancedLectureCardProps> = ({
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                variant === 'student' ? onPlay?.() : onPreview?.();
+                if (variant === 'student') onPlay?.();
+                else onPreview?.();
               }}
               disabled={isLocked}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"

@@ -233,14 +233,16 @@ const SupportTicketList: React.FC<SupportTicketListProps> = ({
 
     // Apply sorting
     switch (sortBy) {
-      case 'priority':
+      case 'priority': {
         const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
         filtered.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
         break;
-      case 'status':
+      }
+      case 'status': {
         const statusOrder = { open: 4, 'in-progress': 3, 'waiting-response': 2, resolved: 1, closed: 0 };
         filtered.sort((a, b) => (statusOrder[b.status] || 0) - (statusOrder[a.status] || 0));
         break;
+      }
       default: // recent
         filtered.sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
         break;

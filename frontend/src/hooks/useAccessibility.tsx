@@ -259,29 +259,32 @@ export const useAccessibility = (options: UseAccessibilityOptions = {}) => {
     const prevKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
 
     switch (e.key) {
-      case nextKey:
+      case nextKey: {
         e.preventDefault();
         const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
         onIndexChange(nextIndex);
         items[nextIndex]?.focus();
         break;
-      case prevKey:
+      }
+      case prevKey: {
         e.preventDefault();
         const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
         onIndexChange(prevIndex);
         items[prevIndex]?.focus();
         break;
+      }
       case 'Home':
         e.preventDefault();
         onIndexChange(0);
         items[0]?.focus();
         break;
-      case 'End':
+      case 'End': {
         e.preventDefault();
         const lastIndex = items.length - 1;
         onIndexChange(lastIndex);
         items[lastIndex]?.focus();
         break;
+      }
     }
   }, []);
 

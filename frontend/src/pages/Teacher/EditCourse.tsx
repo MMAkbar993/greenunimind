@@ -524,7 +524,7 @@ const EditCourse = () => {
       const res = await editCourse({
         id: courseId,
         data: formData,
-        creatorId: data?.data?._id, // Pass creator ID for proper cache invalidation
+        creatorId: teacherId, // Pass creator ID for proper cache invalidation
       }).unwrap();
 
       console.log("✅ Frontend - Edit course response:", res);
@@ -552,7 +552,7 @@ const EditCourse = () => {
       const err = error as { data?: { message?: string } };
       toast.error(err?.data?.message || "Failed to update course");
     }
-  }, [formRef, learningObjectives, editCourse, courseId, dispatch, navigate, hasStripeConnected]);
+  }, [formRef, learningObjectives, editCourse, courseId, dispatch, navigate, hasStripeConnected, teacherId]);
 
   // AI Enhancement handler for learning objectives
   const handleGenerateLearningObjectives = useCallback(async () => {

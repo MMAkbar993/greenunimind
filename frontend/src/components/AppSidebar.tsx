@@ -99,13 +99,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Log the role being used for debugging
   console.log("AppSidebar using role:", userRole);
 
+  // Hook must be called at the component's top level, not inside renderItems
+  // (which is recursive and not a component/hook itself).
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   const renderItems = (
     items: TDashboardNavMenuItem[],
     parentKey: string = ""
   ): React.ReactNode => {
-    const { state } = useSidebar();
-    const isCollapsed = state === "collapsed";
-
     return items.map((item, index) => {
       const key = `${parentKey}-${item.title}-${index}`;
       const isActive = location.pathname === item.url;

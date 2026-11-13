@@ -111,7 +111,7 @@ const MessageCompose: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [subject, content, recipients, messageType, priority]);
+  }, [isComposing, subject, content, recipients, attachments, messageType, priority]);
 
   const handleClose = () => {
     if (subject.trim() || content.trim()) {
