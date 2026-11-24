@@ -4,10 +4,13 @@ import { Skeleton } from "./ui/skeleton";
 import EducatorCard from "./EducatorCard";
 import { useGetPublicEducatorsQuery } from "@/redux/features/teacher/publicTeacherApi";
 
+// 1 column on phones, 2 on tablets, 4 on desktop; cards stay centred when fewer exist.
+const CARD_WIDTH = "w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]";
+
 const TopTeachersSection = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useGetPublicEducatorsQuery();
-  const topEducators = (data?.data || []).slice(0, 3);
+  const topEducators = (data?.data || []).slice(0, 4);
 
   // No published-course instructors yet — nothing real to show, so don't
   // show a fake section instead of leaving a visible gap.
@@ -30,10 +33,14 @@ const TopTeachersSection = () => {
         </div>
 
         {/* Teachers Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
           {isLoading
-            ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-80 rounded-lg" />)
-            : topEducators.map((educator) => <EducatorCard key={educator._id} educator={educator} />)}
+            ? [1, 2, 3, 4].map((i) => <Skeleton key={i} className={`h-80 rounded-lg ${CARD_WIDTH}`} />)
+            : topEducators.map((educator) => (
+                <div key={educator._id} className={CARD_WIDTH}>
+                  <EducatorCard educator={educator} />
+                </div>
+              ))}
         </div>
 
         {/* View All Educators Button */}
